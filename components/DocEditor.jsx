@@ -206,20 +206,24 @@ export default function DocEditor({
             Paste a client's WhatsApp inquiry or email details below. The AI Agent node extracts specifications, quantities, and populates the editor instantly.
           </p>
 
-          {/* Preset Selectors */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Load Service Preset Brief</label>
-            <select
-              value={selectedPresetId}
-              onChange={(e) => handlePresetChange(e.target.value)}
-              className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
-            >
-              {mockAIIntakePresets.map(preset => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.channel} - {preset.title}
-                </option>
+          {/* Preset Selection Pills */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">💡 Ingest Test Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {mockAIIntakePresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handlePresetChange(preset.id)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border ${
+                    selectedPresetId === preset.id
+                      ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/15 border-brand-pink text-white shadow-sm'
+                      : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200 hover:border-slate-750'
+                  }`}
+                >
+                  {preset.title.replace(' (WhatsApp)', '').replace(' (Email)', '')}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           {/* Raw Text Input */}

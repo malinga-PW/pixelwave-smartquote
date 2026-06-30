@@ -1,10 +1,15 @@
 import React from 'react';
-import { LayoutDashboard, FileText, Globe, Cpu, ChevronRight, Settings } from 'lucide-react';
+import { 
+  LayoutDashboard, FileText, Globe, Cpu, 
+  ChevronRight, Settings, Users, Calendar 
+} from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
     { id: 'editor', label: 'AI Doc Builder', icon: FileText },
+    { id: 'clients', label: 'Clients & Subs', icon: Users },
+    { id: 'calendar', label: 'Operations Calendar', icon: Calendar },
     { id: 'portal', label: 'Client Portal', icon: Globe },
     { id: 'n8n', label: 'n8n AI Workflows', icon: Cpu },
   ];
