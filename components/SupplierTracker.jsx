@@ -3,6 +3,38 @@ import { Truck, Plus, TrendingUp, TrendingDown, DollarSign, Package, Trash2, Sav
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabaseClient';
 
+const INITIAL_SUPPLIERS = [
+  {
+    id: 'sup-1',
+    name: 'Ceylinco Paper Merchants',
+    contact: '+94 11 234 5678',
+    category: 'Board & Paper',
+    purchases: [
+      { id: 'p-1', material: 'Box Board (Grey Back)', qty: 200, unit: 'Full Sheet', unitCost: 75, clientBillRate: 85, date: '2026-06-15' },
+      { id: 'p-2', material: 'Artboard 400 GSM',      qty: 100, unit: 'Full Sheet', unitCost: 140, clientBillRate: 160, date: '2026-06-20' },
+    ]
+  },
+  {
+    id: 'sup-2',
+    name: 'Kalhari Printing Supplies',
+    contact: '+94 77 987 1234',
+    category: 'Specialty Paper',
+    purchases: [
+      { id: 'p-3', material: 'Ice Gold',      qty: 50,  unit: 'Full Sheet', unitCost: 250, clientBillRate: 280, date: '2026-06-10' },
+      { id: 'p-4', material: 'Ice Silver',    qty: 50,  unit: 'Full Sheet', unitCost: 250, clientBillRate: 280, date: '2026-06-10' },
+    ]
+  },
+  {
+    id: 'sup-3',
+    name: 'Mihiri Blanks & Fabrics',
+    contact: '+94 71 345 6789',
+    category: 'T-Shirts & Fabric',
+    purchases: [
+      { id: 'p-5', material: 'Cotton T-Shirt 200 GSM', qty: 300, unit: 'Units', unitCost: 520, clientBillRate: 600, date: '2026-06-22' },
+    ]
+  }
+];
+
 export default function SupplierTracker() {
   const [suppliers, setSuppliers] = useState([]);
   const [selectedSupplierId, setSelectedSupplierId] = useState(null);
@@ -13,6 +45,13 @@ export default function SupplierTracker() {
 
   // Fetch Suppliers and Purchases
   useEffect(() => {
+    if (!supabase) {
+      setSuppliers(INITIAL_SUPPLIERS);
+      setSelectedSupplierId(INITIAL_SUPPLIERS[0].id);
+      setLoading(false);
+      return;
+    }
+
     async function fetchData() {
       const [supRes, purRes] = await Promise.all([
         supabase.from('suppliers').select('*').order('name'),
@@ -84,59 +123,79 @@ export default function SupplierTracker() {
 
   const handleAddSupplier = async (e) => {
     e.preventDefault();
-    const newSup = {
-      name: newSupplierName,
-      contact: newSupplierContact,
-      category: newSupplierCategory,
-      notes: ''
-    };
-    const { data, error } = await supabase.from('suppliers').insert(newSup).select();
-    if (data && data.length > 0) {
-      const added = { ...data[0], purchases: [] };
+    const tempId = `sup-${Date.now()}`;
+    if (supabase) {
+      const { data, error } = await supabase.from('suppliers').insert({
+        name: newSupplierName,
+        contact: newSupplierContact,
+        category: newSupplierCategory,
+        notes: ''
+      }).select();
+      if (data && data.length > 0) {
+        const added = { ...data[0], purchases: [] };
+        setSuppliers([...suppliers, added]);
+        setSelectedSupplierId(added.id);
+      }
+    } else {
+      const added = {
+        id: tempId,
+        name: newSupplierName,
+        contact: newSupplierContact,
+        category: newSupplierCategory,
+        purchases: []
+      };
       setSuppliers([...suppliers, added]);
-      setSelectedSupplierId(added.id);
-      setShowAddSupplier(false);
-      setNewSupplierName('');
-      setNewSupplierContact('');
-      setNotification(`✅ Supplier "${added.name}" added.`);
-      setTimeout(() => setNotification(''), 3500);
-      confetti({ particleCount: 30, spread: 25 });
+      setSelectedSupplierId(tempId);
     }
+    setShowAddSupplier(false);
+    setNewSupplierName('');
+    setNewSupplierContact('');
+    setNotification(`✅ Supplier added.`);
+    setTimeout(() => setNotification(''), 3500);
+    confetti({ particleCount: 30, spread: 25 });
   };
 
   const handleAddPurchase = async (e) => {
     e.preventDefault();
-    const newPur = {
-      supplier_id: selectedSupplierId,
+    const tempId = `p-${Date.now()}`;
+    const mappedPur = {
       material: newMaterial,
-      quantity: parseInt(newQty),
+      qty: parseInt(newQty),
       unit: newUnit,
-      unit_cost: parseFloat(newUnitCost),
-      client_bill_rate: parseFloat(newBillRate),
-      purchase_date: new Date().toISOString().split('T')[0]
+      unitCost: parseFloat(newUnitCost),
+      clientBillRate: parseFloat(newBillRate),
+      date: new Date().toISOString().split('T')[0]
     };
-    
-    const { data, error } = await supabase.from('supplier_purchases').insert(newPur).select();
-    if (data && data.length > 0) {
-      const mappedPur = {
-        id: data[0].id,
-        material: data[0].material,
-        qty: Number(data[0].quantity),
-        unit: data[0].unit,
-        unitCost: Number(data[0].unit_cost),
-        clientBillRate: Number(data[0].client_bill_rate),
-        date: data[0].purchase_date
+
+    if (supabase) {
+      const newPur = {
+        supplier_id: selectedSupplierId,
+        material: newMaterial,
+        quantity: parseInt(newQty),
+        unit: newUnit,
+        unit_cost: parseFloat(newUnitCost),
+        client_bill_rate: parseFloat(newBillRate),
+        purchase_date: new Date().toISOString().split('T')[0]
       };
+      const { data } = await supabase.from('supplier_purchases').insert(newPur).select();
+      if (data && data.length > 0) {
+        setSuppliers(suppliers.map(s =>
+          s.id === selectedSupplierId
+            ? { ...s, purchases: [...s.purchases, { ...mappedPur, id: data[0].id }] }
+            : s
+        ));
+      }
+    } else {
       setSuppliers(suppliers.map(s =>
         s.id === selectedSupplierId
-          ? { ...s, purchases: [...s.purchases, mappedPur] }
+          ? { ...s, purchases: [...s.purchases, { ...mappedPur, id: tempId }] }
           : s
       ));
-      setShowAddPurchase(false);
-      setNewMaterial('');
-      setNotification(`✅ Purchase entry added to ${selectedSupplier?.name}.`);
-      setTimeout(() => setNotification(''), 3500);
     }
+    setShowAddPurchase(false);
+    setNewMaterial('');
+    setNotification(`✅ Purchase entry added.`);
+    setTimeout(() => setNotification(''), 3500);
   };
 
   const handleDeletePurchase = async (purchaseId) => {
@@ -145,7 +204,9 @@ export default function SupplierTracker() {
         ? { ...s, purchases: s.purchases.filter(p => p.id !== purchaseId) }
         : s
     ));
-    await supabase.from('supplier_purchases').delete().eq('id', purchaseId);
+    if (supabase) {
+      await supabase.from('supplier_purchases').delete().eq('id', purchaseId);
+    }
   };
 
   return (

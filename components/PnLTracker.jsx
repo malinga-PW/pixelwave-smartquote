@@ -26,6 +26,37 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const fmt = (n) => `Rs.${Math.abs(n).toLocaleString()}`;
 const getCat = (id) => CATEGORIES.find(c => c.id === id);
 
+// Fallback seed data if Supabase is offline
+const INITIAL_EXPENSES = [
+  { id: 'e1',  category: 'domain',   description: 'pixelwave.lk (2 yr)',   amount: 7200,  month: 1,  year: 2026, recurring: true,  recurrMonths: 24 },
+  { id: 'e2',  category: 'domain',   description: 'maxwelllanka.lk',        amount: 3500,  month: 3,  year: 2026, recurring: true,  recurrMonths: 12 },
+  { id: 'e3',  category: 'hosting',  description: 'Hostinger Business Plan',amount: 8900,  month: 1,  year: 2026, recurring: true,  recurrMonths: 12 },
+  { id: 'e4',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 1,  year: 2026, recurring: true,  recurrMonths: 1  },
+  { id: 'e5',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 2,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e6',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 3,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e7',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 4,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e8',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e9',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e10', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 1,  year: 2026, recurring: true,  recurrMonths: 1  },
+  { id: 'e11', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 2,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e12', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 3,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e13', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 4,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e14', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e15', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e16', category: 'ads',      description: 'Facebook Ads — Packaging', amount: 5000, month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e17', category: 'ads',      description: 'Facebook Ads — Laser',     amount: 4000, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
+  { id: 'e18', category: 'ads',      description: 'Instagram Story Boost',    amount: 2500, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
+];
+
+const INITIAL_REVENUES = [
+  { month: 1, revenue: 320000 },
+  { month: 2, revenue: 410000 },
+  { month: 3, revenue: 280000 },
+  { month: 4, revenue: 540000 },
+  { month: 5, revenue: 710000 },
+  { month: 6, revenue: 630000 },
+];
+
 export default function PnLTracker({ isDark = true }) {
   const currentYear  = 2026;
   const currentMonth = 6; // June
@@ -40,6 +71,13 @@ export default function PnLTracker({ isDark = true }) {
 
   // Fetch Data
   useEffect(() => {
+    if (!supabase) {
+      setExpenses(INITIAL_EXPENSES);
+      setRevenues(INITIAL_REVENUES);
+      setLoading(false);
+      return;
+    }
+
     async function fetchData() {
       const [expRes, revRes] = await Promise.all([
         supabase.from('pnl_expenses').select('*').order('created_at', { ascending: false }),
@@ -114,49 +152,69 @@ export default function PnLTracker({ isDark = true }) {
   const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!fDesc || !fAmt) return;
-    const newExp = {
-      category: fCat,
-      description: fDesc,
-      amount: parseFloat(fAmt),
-      month: parseInt(fMonth),
-      year: selectedYear,
-      recurring: false,
-      recurr_months: 1,
-    };
-    
-    const { data, error } = await supabase.from('pnl_expenses').insert(newExp).select();
-    if (data && data.length > 0) {
-      setExpenses(prev => [...prev, { ...data[0], recurrMonths: data[0].recurr_months }]);
-      setShowAddExpense(false);
-      setFDesc(''); setFAmt('');
+    const tempId = `e-${Date.now()}`;
+    if (supabase) {
+      const { data, error } = await supabase.from('pnl_expenses').insert({
+        category: fCat,
+        description: fDesc,
+        amount: parseFloat(fAmt),
+        month: parseInt(fMonth),
+        year: selectedYear,
+        recurring: false,
+        recurr_months: 1,
+      }).select();
+      if (data && data.length > 0) {
+        setExpenses(prev => [...prev, { ...data[0], recurrMonths: data[0].recurr_months }]);
+      } else {
+        console.error('Failed to add expense:', error);
+      }
     } else {
-      console.error('Failed to add expense:', error);
+      setExpenses(prev => [...prev, {
+        id: tempId,
+        category: fCat,
+        description: fDesc,
+        amount: parseFloat(fAmt),
+        month: parseInt(fMonth),
+        year: selectedYear,
+        recurring: false,
+        recurrMonths: 1,
+      }]);
     }
+    setShowAddExpense(false);
+    setFDesc(''); setFAmt('');
   };
 
   const handleAddRevenue = async (e) => {
     e.preventDefault();
     if (!fRev) return;
-    
+
     const monthNum = parseInt(fRevMonth);
     const amount = parseFloat(fRev);
-    const exists = revenues.find(r => r.month === monthNum && r.year === selectedYear);
     
-    if (exists) {
-      const { data, error } = await supabase.from('pnl_revenues')
-        .update({ revenue: exists.revenue + amount })
-        .eq('id', exists.id)
-        .select();
-      if (data && data.length > 0) {
-        setRevenues(prev => prev.map(r => r.id === exists.id ? data[0] : r));
+    if (supabase) {
+      const exists = revenues.find(r => r.month === monthNum && r.year === selectedYear);
+      if (exists) {
+        const { data, error } = await supabase.from('pnl_revenues')
+          .update({ revenue: exists.revenue + amount })
+          .eq('id', exists.id)
+          .select();
+        if (data && data.length > 0) {
+          setRevenues(prev => prev.map(r => r.id === exists.id ? data[0] : r));
+        }
+      } else {
+        const { data, error } = await supabase.from('pnl_revenues')
+          .insert({ month: monthNum, year: selectedYear, revenue: amount })
+          .select();
+        if (data && data.length > 0) {
+          setRevenues(prev => [...prev, data[0]]);
+        }
       }
     } else {
-      const { data, error } = await supabase.from('pnl_revenues')
-        .insert({ month: monthNum, year: selectedYear, revenue: amount })
-        .select();
-      if (data && data.length > 0) {
-        setRevenues(prev => [...prev, data[0]]);
-      }
+      setRevenues(prev => {
+        const exists = prev.find(r => r.month === monthNum);
+        if (exists) return prev.map(r => r.month === monthNum ? { ...r, revenue: r.revenue + amount } : r);
+        return [...prev, { month: monthNum, revenue: amount }];
+      });
     }
     
     setShowAddRevenue(false);
@@ -165,7 +223,9 @@ export default function PnLTracker({ isDark = true }) {
 
   const handleDeleteExpense = async (id) => {
     setExpenses(prev => prev.filter(e => e.id !== id));
-    await supabase.from('pnl_expenses').delete().eq('id', id);
+    if (supabase) {
+      await supabase.from('pnl_expenses').delete().eq('id', id);
+    }
   };
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
