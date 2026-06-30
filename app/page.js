@@ -8,6 +8,10 @@ import ClientPortal from '../components/ClientPortal';
 import N8nWorkflow from '../components/N8nWorkflow';
 import ClientsSubscriptions from '../components/ClientsSubscriptions';
 import OperationsCalendar from '../components/OperationsCalendar';
+import PricingMatrix from '../components/PricingMatrix';
+import KanbanBoard from '../components/KanbanBoard';
+import MarketingHub from '../components/MarketingHub';
+import BrandCustomizer from '../components/BrandCustomizer';
 import { initialDocuments } from '../data/mockDatabase';
 import { supabase } from '../lib/supabaseClient';
 
@@ -310,6 +314,22 @@ export default function Home() {
 
           {activeTab === 'calendar' && (
             <OperationsCalendar />
+          )}
+
+          {activeTab === 'pricing' && (
+            <PricingMatrix />
+          )}
+
+          {activeTab === 'kanban' && (
+            <KanbanBoard />
+          )}
+
+          {activeTab === 'marketing' && (
+            <MarketingHub />
+          )}
+
+          {activeTab === 'customizer' && (
+            <BrandCustomizer />
           )}
 
           {activeTab === 'n8n' && (

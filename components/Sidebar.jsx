@@ -1,21 +1,25 @@
 import React from 'react';
 import { 
-  LayoutDashboard, FileText, Globe, Cpu, 
-  ChevronRight, Settings, Users, Calendar 
+  LayoutDashboard, FileText, Globe, Cpu, ChevronRight, 
+  Settings, Users, Calendar, DollarSign, Briefcase, Share2 
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
     { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
     { id: 'editor', label: 'AI Doc Builder', icon: FileText },
+    { id: 'pricing', label: 'AI Pricing Matrix', icon: DollarSign },
+    { id: 'kanban', label: 'Production Kanban', icon: Briefcase },
     { id: 'clients', label: 'Clients & Subs', icon: Users },
-    { id: 'calendar', label: 'Operations Calendar', icon: Calendar },
+    { id: 'calendar', label: 'Operations Planner', icon: Calendar },
+    { id: 'marketing', label: 'n8n Campaigns', icon: Share2 },
     { id: 'portal', label: 'Client Portal', icon: Globe },
+    { id: 'customizer', label: 'Brand Customizer', icon: Settings },
     { id: 'n8n', label: 'n8n AI Workflows', icon: Cpu },
   ];
 
   return (
-    <aside className="w-64 bg-slate-900/60 backdrop-blur-md border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 no-print">
+    <aside className="w-64 bg-slate-900/60 backdrop-blur-md border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 overflow-y-auto no-print">
       {/* Top Section */}
       <div className="p-6">
         {/* Brand Header */}
