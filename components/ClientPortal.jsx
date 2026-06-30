@@ -33,12 +33,14 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = (e) => {
+    e.stopPropagation();
     setShowDownloadMenu(false);
     window.print();
   };
 
-  const handleDownloadJPEG = async () => {
+  const handleDownloadJPEG = async (e) => {
+    e.stopPropagation();
     setShowDownloadMenu(false);
     try {
       const el = document.querySelector('.print-card');

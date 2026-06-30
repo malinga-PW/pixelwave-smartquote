@@ -111,6 +111,10 @@ body {
   .no-print {
     display: none !important;
   }
+  main, aside, div, section, article, header, footer, nav {
+    background: white !important;
+    color: black !important;
+  }
   .glass-panel {
     background: white !important;
     border: 1px solid #ddd !important;
@@ -125,6 +129,9 @@ body {
     background: white !important;
     max-width: 100% !important;
     border-radius: 0 !important;
+  }
+  .bg-\[\#090d16\], .bg-slate-900, .bg-slate-950, .bg-slate-800, .bg-slate-850 {
+    background: white !important;
   }
   #doc-editor-form {
     background: white !important;
@@ -150,9 +157,17 @@ body {
   #doc-editor-form td {
     color: #333 !important;
   }
+  #doc-editor-form .text-slate-100,
+  #doc-editor-form .text-slate-200,
+  #doc-editor-form .text-slate-300,
+  #doc-editor-form .text-white,
+  #doc-editor-form .text-brand-cyan,
+  #doc-editor-form .text-gradient-blue-pink {
+    color: black !important;
+  }
   @page {
     size: A4;
-    margin: 10mm 15mm;
+    margin: 5mm 10mm;
   }
   table {
     page-break-inside: avoid;

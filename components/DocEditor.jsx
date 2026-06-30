@@ -41,17 +41,19 @@ export default function DocEditor({
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = (e) => {
+    e.stopPropagation();
     setShowDownloadMenu(false);
     window.print();
   };
 
-  const handleDownloadJPEG = async () => {
+  const handleDownloadJPEG = async (e) => {
+    e.stopPropagation();
     setShowDownloadMenu(false);
     try {
       const el = document.querySelector('#doc-editor-form');
       if (!el) return;
-      const canvas = await html2canvas(el, { backgroundColor: '#090d16', scale: 2 });
+      const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
       const link = document.createElement('a');
       link.download = (quoteNo || 'document') + '.jpeg';
       link.href = canvas.toDataURL('image/jpeg', 0.95);
@@ -395,7 +397,7 @@ export default function DocEditor({
               {/* Download Dropdown */}
               <div className="relative">
                 <button
-                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                  onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }}
                   className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 text-[11px] font-semibold flex items-center gap-1 transition-all"
                 >
                   <Download className="w-3 h-3" />
