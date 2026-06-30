@@ -58,15 +58,35 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
     });
   }, [documents]);
 
-  // Chart Data: Monthly progression (simulated)
-  const progressionData = [
-    { name: 'Jan', revenue: 120000, quotes: 5 },
-    { name: 'Feb', revenue: 210000, quotes: 8 },
-    { name: 'Mar', revenue: 180000, quotes: 7 },
-    { name: 'Apr', revenue: 340000, quotes: 12 },
-    { name: 'May', revenue: 410000, quotes: 15 },
-    { name: 'Jun', revenue: 680000, quotes: 22 },
+  const [chartView, setChartView] = useState('weekly'); // 'weekly' | 'monthly'
+
+  // Weekly progression data — last 7 days
+  const weeklyData = [
+    { name: 'Mon', leads: 3,  quoteSent: 2, revenue: 45000  },
+    { name: 'Tue', leads: 5,  quoteSent: 3, revenue: 78000  },
+    { name: 'Wed', leads: 2,  quoteSent: 2, revenue: 32000  },
+    { name: 'Thu', leads: 7,  quoteSent: 5, revenue: 155000 },
+    { name: 'Fri', leads: 4,  quoteSent: 3, revenue: 91000  },
+    { name: 'Sat', leads: 6,  quoteSent: 4, revenue: 210000 },
+    { name: 'Sun', leads: 2,  quoteSent: 1, revenue: 28000  },
   ];
+
+  // Monthly progression data — last 6 months
+  const monthlyData = [
+    { name: 'Jan', leads: 18, quoteSent: 12, revenue: 320000 },
+    { name: 'Feb', leads: 24, quoteSent: 18, revenue: 510000 },
+    { name: 'Mar', leads: 19, quoteSent: 14, revenue: 390000 },
+    { name: 'Apr', leads: 31, quoteSent: 22, revenue: 740000 },
+    { name: 'May', leads: 38, quoteSent: 28, revenue: 920000 },
+    { name: 'Jun', leads: 29, quoteSent: 20, revenue: 639000 },
+  ];
+
+  const progressionData = chartView === 'weekly' ? weeklyData : monthlyData;
+
+  // Derived conversion rate for current view
+  const totalLeads   = progressionData.reduce((s, d) => s + d.leads, 0);
+  const totalQuotes  = progressionData.reduce((s, d) => s + d.quoteSent, 0);
+  const convRate     = totalLeads > 0 ? ((totalQuotes / totalLeads) * 100).toFixed(0) : 0;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -180,29 +200,84 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Revenue Progression Area Chart */}
         <div className="glass-panel rounded-2xl p-5 md:col-span-2 space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="text-sm font-bold text-white tracking-wider uppercase">Lead to Revenue Conversion Timeline</h4>
-            <span className="text-[10px] px-2 py-1 rounded bg-slate-800 text-brand-cyan font-semibold border border-slate-700">Monthly</span>
+          <div className="flex justify-between items-center flex-wrap gap-3">
+            <div>
+              <h4 className="text-sm font-bold text-white tracking-wider uppercase">Lead to Revenue Conversion Timeline</h4>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-slate-400">Conversion rate:</span>
+                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan">{convRate}%</span>
+                <span className="text-[9px] text-slate-600">({totalQuotes}/{totalLeads} leads → quotes)</span>
+              </div>
+            </div>
+            {/* Toggle */}
+            <div className="flex bg-slate-950/50 p-1 border border-slate-800 rounded-xl no-print">
+              {['weekly', 'monthly'].map(v => (
+                <button
+                  key={v}
+                  onClick={() => setChartView(v)}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                    chartView === v
+                      ? 'bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
           </div>
+
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={progressionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0b54fe" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#0b54fe" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#009eff" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="#009eff" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#fc0fc0" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#fc0fc0" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorQuotes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.3} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => `${v/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                <YAxis yAxisId="rev" stroke="#64748b" fontSize={10} tickFormatter={(v) => `${v/1000}k`} />
+                <YAxis yAxisId="cnt" orientation="right" stroke="#64748b" fontSize={10} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '11px' }}
                   labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                  formatter={(value, name) => {
+                    if (name === 'revenue') return [`Rs.${value.toLocaleString()}`, 'Revenue'];
+                    if (name === 'leads')   return [value, 'New Leads'];
+                    if (name === 'quoteSent') return [value, 'Quotes Sent'];
+                    return [value, name];
+                  }}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#009eff" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
+                <Area yAxisId="rev" type="monotone" dataKey="revenue"   stroke="#009eff" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
+                <Area yAxisId="cnt" type="monotone" dataKey="leads"     stroke="#fc0fc0" strokeWidth={1.5} fillOpacity={1} fill="url(#colorLeads)" strokeDasharray="4 2" />
+                <Area yAxisId="cnt" type="monotone" dataKey="quoteSent" stroke="#10b981" strokeWidth={1.5} fillOpacity={1} fill="url(#colorQuotes)" strokeDasharray="4 2" />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-5 pt-1 border-t border-slate-850 flex-wrap">
+            {[
+              { color: '#009eff', label: 'Revenue (LKR)', dashed: false },
+              { color: '#fc0fc0', label: 'New Leads',     dashed: true  },
+              { color: '#10b981', label: 'Quotes Sent',   dashed: true  },
+            ].map(l => (
+              <div key={l.label} className="flex items-center gap-1.5">
+                <div className="h-0.5 w-6" style={{ backgroundColor: l.color, borderStyle: l.dashed ? 'dashed' : 'solid', borderColor: l.color, borderTopWidth: 2, background: 'none' }}></div>
+                <span className="text-[9px] text-slate-400 font-semibold">{l.label}</span>
+              </div>
+            ))}
+            <span className="ml-auto text-[9px] text-slate-600 font-mono">{chartView === 'weekly' ? 'This week · Mon–Sun' : 'This quarter · Jan–Jun'}</span>
           </div>
         </div>
 
