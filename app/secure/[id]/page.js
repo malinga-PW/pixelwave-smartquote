@@ -17,6 +17,10 @@ export default function SecurePortalPage() {
 
     async function fetchDocument() {
       try {
+        if (!supabase) {
+          throw new Error('Supabase client is not initialized. Please verify your environment variables.');
+        }
+
         let query = supabase
           .from('quotations')
           .select(`
