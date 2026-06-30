@@ -74,7 +74,7 @@ export default function TopBar({ isDark, setIsDark, onLogout, isSupabaseConnecte
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-50 h-7 flex items-center px-4 gap-0 select-none
+      className={`fixed top-0 left-0 right-0 z-50 h-7 flex items-center px-4 gap-0 select-none no-print
         ${isDark
           ? 'bg-gradient-to-r from-[#0f1a2e]/95 via-[#0d1425]/95 to-[#0a0f1c]/95 border-b border-brand-blue/20 text-slate-300'
           : 'bg-gradient-to-r from-white/95 via-slate-50/95 to-white/95 border-b border-brand-blue/10 text-slate-700'

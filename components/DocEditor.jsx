@@ -49,7 +49,7 @@ export default function DocEditor({
   const handleDownloadJPEG = async () => {
     setShowDownloadMenu(false);
     try {
-      const el = document.querySelector('.glass-panel');
+      const el = document.querySelector('#doc-editor-form');
       if (!el) return;
       const canvas = await html2canvas(el, { backgroundColor: '#090d16', scale: 2 });
       const link = document.createElement('a');
@@ -381,7 +381,7 @@ export default function DocEditor({
 
       {/* RIGHT PANEL: Interactive Document Form Editor */}
       <div className="lg:col-span-8 h-full overflow-y-auto">
-        <div className="glass-panel rounded-2xl p-4 border border-slate-800/80 space-y-3">
+        <div id="doc-editor-form" className="glass-panel rounded-2xl p-4 border border-slate-800/80 space-y-3">
           {/* Form Header */}
           <div className="flex justify-between items-center gap-2 border-b border-slate-800/80 pb-3">
             <div>
