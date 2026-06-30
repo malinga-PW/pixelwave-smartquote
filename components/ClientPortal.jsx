@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   CheckCircle, FileDown, ShieldCheck, Sparkles, 
-  Signature, CreditCard, RefreshCw, X, ArrowUpRight 
+  Signature, CreditCard, RefreshCw, X, ArrowUpRight,
+  Download, FileImage
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import html2canvas from 'html2canvas';
 
 export default function ClientPortal({ activeDocument, onUpdateStatus }) {
   const [signatureType, setSignatureType] = useState('draw');
@@ -16,6 +18,40 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvc, setCardCvc] = useState('');
+
+  // Download dropdown
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const downloadRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (downloadRef.current && !downloadRef.current.contains(e.target)) {
+        setShowDownloadMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleDownloadPDF = () => {
+    setShowDownloadMenu(false);
+    window.print();
+  };
+
+  const handleDownloadJPEG = async () => {
+    setShowDownloadMenu(false);
+    try {
+      const el = document.querySelector('.print-card');
+      if (!el) return;
+      const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+      const link = document.createElement('a');
+      link.download = (activeDocument?.quote_no || 'document') + '.jpeg';
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.click();
+    } catch (err) {
+      console.error('JPEG download failed:', err);
+    }
+  };
 
   // Webhook debugger states
   const [webhookLog, setWebhookLog] = useState(null);
@@ -199,6 +235,33 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
           <span className="text-[11px] uppercase font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
             Link: smartquote.pixelwave.lk/secure/{activeDocument.id}
           </span>
+          <div className="relative" ref={downloadRef}>
+            <button
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-bold border border-slate-700 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
+            </button>
+            {showDownloadMenu && (
+              <div className="absolute right-0 mt-1.5 w-40 bg-slate-900 border border-slate-700 rounded-xl shadow-xl shadow-slate-950/50 py-1 z-50 fade-in">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </button>
+                <button
+                  onClick={handleDownloadJPEG}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                >
+                  <FileImage className="w-3.5 h-3.5" />
+                  <span>Download JPEG</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
