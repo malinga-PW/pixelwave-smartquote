@@ -232,7 +232,7 @@ export default function SupplierTracker() {
       </div>
 
       {notification && (
-        <div className="bg-emerald-950/15 border border-emerald-900/30 px-4 py-3 rounded-xl text-xs text-emerald-400 font-semibold">
+        <div className="bg-emerald-950/15 border border-emerald-900/30 px-4 py-3 rounded-xl text-[13px] text-emerald-400 font-semibold">
           {notification}
         </div>
       )}
@@ -250,7 +250,7 @@ export default function SupplierTracker() {
             <div key={i} className={`glass-panel rounded-2xl p-5 border-l-4 ${stat.color}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
                   <p className="text-xl font-bold text-white font-mono mt-1">{stat.val}</p>
                 </div>
                 <Icon className="w-5 h-5 text-slate-600" />
@@ -264,7 +264,7 @@ export default function SupplierTracker() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Supplier List (4 cols) */}
         <div className="lg:col-span-4 glass-panel rounded-2xl p-5 border border-slate-800/80 space-y-3">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-850 pb-3">
+          <h3 className="text-[13px] font-bold text-white uppercase tracking-wider border-b border-slate-850 pb-3">
             Suppliers ({suppliers.length})
           </h3>
           <div className="space-y-2">
@@ -283,12 +283,12 @@ export default function SupplierTracker() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>{sup.name}</p>
-                      <p className="text-[9px] text-slate-500 mt-0.5">{sup.category} · {sup.purchases.length} entries</p>
+                      <p className={`text-[13px] font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>{sup.name}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{sup.category} · {sup.purchases.length} entries</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-mono font-bold text-brand-cyan">+{stats.marginPct}%</p>
-                      <p className="text-[9px] text-slate-500 font-mono">margin</p>
+                      <p className="text-[11px] font-mono font-bold text-brand-cyan">+{stats.marginPct}%</p>
+                      <p className="text-[10px] text-slate-500 font-mono">margin</p>
                     </div>
                   </div>
                 </button>
@@ -304,11 +304,11 @@ export default function SupplierTracker() {
               <div className="flex justify-between items-center border-b border-slate-850 pb-3">
                 <div>
                   <h3 className="text-sm font-bold text-white">{selectedSupplier.name}</h3>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedSupplier.contact} · {selectedSupplier.category}</p>
+                  <p className="text-[11px] text-slate-500 font-mono mt-0.5">{selectedSupplier.contact} · {selectedSupplier.category}</p>
                 </div>
                 <button
                   onClick={() => setShowAddPurchase(true)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-brand-cyan text-[10px] font-bold flex items-center gap-1.5 hover:border-brand-cyan/50 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-brand-cyan text-[11px] font-bold flex items-center gap-1.5 hover:border-brand-cyan/50 transition-all"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add Purchase</span>
@@ -316,7 +316,7 @@ export default function SupplierTracker() {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 text-[9px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1 border-b border-slate-850">
+              <div className="grid grid-cols-12 text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1 border-b border-slate-850">
                 <div className="col-span-3">Material</div>
                 <div className="col-span-2 text-center">Qty</div>
                 <div className="col-span-2 text-right">Cost/Unit</div>
@@ -332,21 +332,21 @@ export default function SupplierTracker() {
                   return (
                     <div key={p.id} className="grid grid-cols-12 items-center bg-slate-950/30 px-3 py-2.5 rounded-xl border border-slate-850 hover:border-slate-750 group transition-colors">
                       <div className="col-span-3">
-                        <p className="text-[10px] font-semibold text-slate-200">{p.material}</p>
+                        <p className="text-[11px] font-semibold text-slate-200">{p.material}</p>
                         <p className="text-[8px] text-slate-600 font-mono">{p.date}</p>
                       </div>
                       <div className="col-span-2 text-center">
-                        <span className="text-xs font-mono text-slate-300">{p.qty}</span>
+                        <span className="text-[13px] font-mono text-slate-300">{p.qty}</span>
                         <span className="text-[8px] text-slate-600 block">{p.unit}</span>
                       </div>
                       <div className="col-span-2 text-right">
-                        <span className="text-[10px] font-mono text-red-400">Rs.{p.unitCost}</span>
+                        <span className="text-[11px] font-mono text-red-400">Rs.{p.unitCost}</span>
                       </div>
                       <div className="col-span-2 text-right">
-                        <span className="text-[10px] font-mono text-emerald-400">Rs.{p.clientBillRate}</span>
+                        <span className="text-[11px] font-mono text-emerald-400">Rs.{p.clientBillRate}</span>
                       </div>
                       <div className="col-span-2 text-right">
-                        <span className="text-[10px] font-bold font-mono text-brand-cyan">+{marginPct}%</span>
+                        <span className="text-[11px] font-bold font-mono text-brand-cyan">+{marginPct}%</span>
                         <span className="text-[8px] text-slate-600 block font-mono">Rs.{lineMargin.toLocaleString()}</span>
                       </div>
                       <div className="col-span-1 flex justify-end">
@@ -367,7 +367,7 @@ export default function SupplierTracker() {
                 const stats = getSupplierStats(selectedSupplier);
                 return (
                   <div className="border-t border-slate-850 pt-3 flex justify-between items-center">
-                    <div className="flex gap-6 text-xs font-mono">
+                    <div className="flex gap-6 text-[13px] font-mono">
                       <span className="text-slate-500">Spend: <strong className="text-red-400">Rs.{stats.totalCost.toLocaleString()}</strong></span>
                       <span className="text-slate-500">Billed: <strong className="text-emerald-400">Rs.{stats.totalBill.toLocaleString()}</strong></span>
                       <span className="text-slate-500">Margin: <strong className="text-brand-cyan">Rs.{stats.margin.toLocaleString()} ({stats.marginPct}%)</strong></span>
@@ -397,20 +397,20 @@ export default function SupplierTracker() {
             </div>
             <form onSubmit={handleAddSupplier} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Supplier / Vendor Name</label>
-                <input required type="text" value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} placeholder="E.g. ABC Paper Merchants" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue" />
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Supplier / Vendor Name</label>
+                <input required type="text" value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} placeholder="E.g. ABC Paper Merchants" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Contact Number</label>
-                <input type="text" value={newSupplierContact} onChange={e => setNewSupplierContact(e.target.value)} placeholder="+94 11 234 5678" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono" />
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Contact Number</label>
+                <input type="text" value={newSupplierContact} onChange={e => setNewSupplierContact(e.target.value)} placeholder="+94 11 234 5678" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Supply Category</label>
-                <select value={newSupplierCategory} onChange={e => setNewSupplierCategory(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Supply Category</label>
+                <select value={newSupplierCategory} onChange={e => setNewSupplierCategory(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue">
                   {['Board & Paper', 'Specialty Paper', 'T-Shirts & Fabric', 'Ink & Chemicals', 'Laser Materials', 'Packaging Supplies', 'IT / SaaS Tools'].map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-xs font-bold">
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-[13px] font-bold">
                 Add Supplier
               </button>
             </form>
@@ -433,32 +433,32 @@ export default function SupplierTracker() {
             </div>
             <form onSubmit={handleAddPurchase} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Material Name</label>
-                <input required type="text" value={newMaterial} onChange={e => setNewMaterial(e.target.value)} placeholder="E.g. Artboard 400 GSM" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue" />
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Material Name</label>
+                <input required type="text" value={newMaterial} onChange={e => setNewMaterial(e.target.value)} placeholder="E.g. Artboard 400 GSM" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quantity</label>
-                  <input type="number" min={1} value={newQty} onChange={e => setNewQty(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono" />
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Quantity</label>
+                  <input type="number" min={1} value={newQty} onChange={e => setNewQty(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unit</label>
-                  <select value={newUnit} onChange={e => setNewUnit(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Unit</label>
+                  <select value={newUnit} onChange={e => setNewUnit(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue">
                     {['Full Sheet', 'Units', 'Kg', 'Roll', 'Ream', 'Litre'].map(u => <option key={u}>{u}</option>)}
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Supplier Cost / Unit (LKR)</label>
-                  <input required type="number" min={0} value={newUnitCost} onChange={e => setNewUnitCost(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-red-300 focus:outline-none focus:border-brand-blue font-mono" />
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Supplier Cost / Unit (LKR)</label>
+                  <input required type="number" min={0} value={newUnitCost} onChange={e => setNewUnitCost(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-red-300 focus:outline-none focus:border-brand-blue font-mono" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Client Bill Rate / Unit (LKR)</label>
-                  <input required type="number" min={0} value={newBillRate} onChange={e => setNewBillRate(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-emerald-300 focus:outline-none focus:border-brand-blue font-mono" />
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Client Bill Rate / Unit (LKR)</label>
+                  <input required type="number" min={0} value={newBillRate} onChange={e => setNewBillRate(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-emerald-300 focus:outline-none focus:border-brand-blue font-mono" />
                 </div>
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-xs font-bold">
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-[13px] font-bold">
                 Log Purchase Entry
               </button>
             </form>

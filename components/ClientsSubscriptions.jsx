@@ -246,7 +246,7 @@ export default function ClientsSubscriptions() {
 
       {/* Mini Alert Banner */}
       {notification && (
-        <div className="bg-brand-blue/15 border border-brand-blue/30 p-4 rounded-xl text-xs text-brand-cyan font-mono animate-pulse">
+        <div className="bg-brand-blue/15 border border-brand-blue/30 p-4 rounded-xl text-[13px] text-brand-cyan font-mono animate-pulse">
           {notification}
         </div>
       )}
@@ -256,7 +256,7 @@ export default function ClientsSubscriptions() {
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-cyan">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Monthly Recurring Revenue (MRR)</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Monthly Recurring Revenue (MRR)</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{totalMRR.toLocaleString()} LKR</h3>
             </div>
             <div className="p-2.5 bg-brand-blue/10 rounded-xl">
@@ -268,7 +268,7 @@ export default function ClientsSubscriptions() {
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-pink">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Hosting Web Clients</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Active Hosting Web Clients</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{activeCount} Sites</h3>
             </div>
             <div className="p-2.5 bg-brand-pink/10 rounded-xl">
@@ -280,7 +280,7 @@ export default function ClientsSubscriptions() {
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-amber-500">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending / Invoice Overdue</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Pending / Invoice Overdue</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{pendingCount} Clients</h3>
             </div>
             <div className="p-2.5 bg-amber-500/10 rounded-xl">
@@ -306,7 +306,7 @@ export default function ClientsSubscriptions() {
             {/* Header info */}
             <div className="flex justify-between items-start gap-4">
               <div>
-                <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
+                <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                   client.status === 'Active' ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/40' :
                   client.status === 'Pending' ? 'bg-amber-950/40 text-amber-400 border-amber-900/40' :
                   'bg-red-950/40 text-red-400 border-red-900/40'
@@ -314,24 +314,24 @@ export default function ClientsSubscriptions() {
                   {client.status}
                 </span>
                 <h3 className="text-base font-bold text-white mt-2.5">{client.name}</h3>
-                <p className="text-xs text-slate-400 font-medium">{client.plan}</p>
+                <p className="text-[13px] text-slate-400 font-medium">{client.plan}</p>
               </div>
 
               <div className="text-right">
-                <span className="text-xs text-slate-500 block">Monthly Retainer</span>
+                <span className="text-[13px] text-slate-500 block">Monthly Retainer</span>
                 <span className="text-base font-black text-brand-cyan font-mono">{client.fee.toLocaleString()} LKR</span>
               </div>
             </div>
 
             {/* Subdomain & Renewal date details */}
-            <div className="mt-6 pt-4 border-t border-slate-850 flex flex-wrap gap-4 text-xs text-slate-400">
+            <div className="mt-6 pt-4 border-t border-slate-850 flex flex-wrap gap-4 text-[13px] text-slate-400">
               <div className="flex items-center gap-1.5 bg-slate-950/40 px-3 py-1.5 rounded-xl border border-slate-850">
                 <Globe className="w-3.5 h-3.5 text-brand-blue" />
-                <span className="font-mono text-[10px] text-slate-300">{client.subdomain}</span>
+                <span className="font-mono text-[11px] text-slate-300">{client.subdomain}</span>
               </div>
               <div className="flex items-center gap-1.5 bg-slate-950/40 px-3 py-1.5 rounded-xl border border-slate-850">
                 <Calendar className="w-3.5 h-3.5 text-brand-pink" />
-                <span>Next Renewal: <span className="font-mono text-[10px] text-slate-300">{client.renewal}</span></span>
+                <span>Next Renewal: <span className="font-mono text-[11px] text-slate-300">{client.renewal}</span></span>
               </div>
             </div>
 
@@ -340,7 +340,7 @@ export default function ClientsSubscriptions() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleSendReminder(client.company)}
-                  className="px-3 py-2 rounded-xl bg-slate-950/50 hover:bg-brand-blue/10 border border-slate-850 hover:border-brand-blue/30 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  className="px-3 py-2 rounded-xl bg-slate-950/50 hover:bg-brand-blue/10 border border-slate-850 hover:border-brand-blue/30 text-slate-300 text-[13px] font-semibold flex items-center gap-1.5 transition-all"
                 >
                   <Bell className="w-3.5 h-3.5 text-brand-cyan" />
                   <span>Send n8n Billing Remind</span>
@@ -385,34 +385,34 @@ export default function ClientsSubscriptions() {
 
             <form onSubmit={handleAddClient} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Client Name</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Client Name</label>
                 <input
                   type="text"
                   required
                   placeholder="E.g., Ceylon Artisans Ltd"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Company / Brand Name</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Company / Brand Name</label>
                 <input
                   type="text"
                   placeholder="E.g., Ceylon Artisans"
                   value={newCompany}
                   onChange={(e) => setNewCompany(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Subscription Plan</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subscription Plan</label>
                 <select
                   value={newPlan}
                   onChange={(e) => setNewPlan(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                 >
                   <option value="Hosting & SmartQuote Bundle">Hosting & SmartQuote Bundle</option>
                   <option value="Premium E-Commerce SLA">Premium E-Commerce SLA</option>
@@ -423,41 +423,41 @@ export default function ClientsSubscriptions() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Monthly Retainer (LKR)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monthly Retainer (LKR)</label>
                   <input
                     type="number"
                     required
                     value={newFee}
                     onChange={(e) => setNewFee(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Subdomain</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subdomain</label>
                   <input
                     type="text"
                     required
                     placeholder="artisans"
                     value={newSubdomain}
                     onChange={(e) => setNewSubdomain(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Renewal Date</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Renewal Date</label>
                 <input
                   type="date"
                   value={newRenewal}
                   onChange={(e) => setNewRenewal(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/10 transition-all"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white text-[13px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/10 transition-all"
               >
                 <span>Activate Subscription SLA</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />

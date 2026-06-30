@@ -165,7 +165,7 @@ export default function OperationsCalendar() {
         <div className="flex bg-slate-950/50 p-1 border border-slate-800 rounded-xl items-center no-print">
           <button
             onClick={() => setViewMode('weekly')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-300 ${
               viewMode === 'weekly'
                 ? 'bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
@@ -175,7 +175,7 @@ export default function OperationsCalendar() {
           </button>
           <button
             onClick={() => setViewMode('monthly')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-300 ${
               viewMode === 'monthly'
                 ? 'bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
@@ -192,10 +192,10 @@ export default function OperationsCalendar() {
           {/* Weekly Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-blue">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Weekly Task Completion</p>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Weekly Task Completion</p>
               <div className="flex items-center justify-between mt-2">
                 <h3 className="text-2xl font-bold text-white">{weeklyStats.rate}%</h3>
-                <span className="text-xs text-slate-500 font-mono">({weeklyStats.completed}/{weeklyStats.total})</span>
+                <span className="text-[13px] text-slate-500 font-mono">({weeklyStats.completed}/{weeklyStats.total})</span>
               </div>
               <div className="w-full bg-slate-950/40 rounded-full h-1.5 mt-3 overflow-hidden border border-slate-900">
                 <div 
@@ -206,17 +206,17 @@ export default function OperationsCalendar() {
             </div>
 
             <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-pink">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Social Media Posts Prepped</p>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Social Media Posts Prepped</p>
               <div className="flex items-center justify-between mt-2">
                 <h3 className="text-2xl font-bold text-white">
-                  {weeklyStats.socialCompleted} <span className="text-xs text-slate-500 font-normal">/ {weeklyStats.socialPrepped} prepped</span>
+                  {weeklyStats.socialCompleted} <span className="text-[13px] text-slate-500 font-normal">/ {weeklyStats.socialPrepped} prepped</span>
                 </h3>
                 <Share2 className="w-5 h-5 text-brand-pink" />
               </div>
             </div>
 
             <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-emerald-500">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Target Retainer Income</p>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Target Retainer Income</p>
               <div className="flex items-center justify-between mt-2">
                 <h3 className="text-2xl font-bold text-white">100,000 LKR</h3>
                 <DollarSign className="w-5 h-5 text-emerald-400" />
@@ -224,7 +224,7 @@ export default function OperationsCalendar() {
             </div>
 
             <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-cyan">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Operations Focus</p>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Operations Focus</p>
               <div className="flex items-center justify-between mt-2">
                 <h3 className="text-sm font-bold text-brand-cyan">n8n Lead Syncing</h3>
                 <Award className="w-5 h-5 text-brand-cyan" />
@@ -236,7 +236,7 @@ export default function OperationsCalendar() {
           <div className="flex justify-end no-print">
             <button
               onClick={() => setShowAddTaskModal(true)}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-750 text-brand-cyan text-xs font-bold flex items-center gap-1.5 transition-all shadow-inner"
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-750 text-brand-cyan text-[13px] font-bold flex items-center gap-1.5 transition-all shadow-inner"
             >
               <Plus className="w-4 h-4" />
               <span>Add Weekly Task</span>
@@ -251,8 +251,8 @@ export default function OperationsCalendar() {
                 <div key={day} className="glass-panel rounded-2xl p-4 border border-slate-850/80 bg-slate-950/10 flex flex-col min-h-[400px] space-y-4">
                   {/* Day Header */}
                   <div className="border-b border-slate-850 pb-2 flex justify-between items-center">
-                    <span className="text-xs font-bold text-white uppercase tracking-widest">{day}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-slate-400 font-mono">
+                    <span className="text-[13px] font-bold text-white uppercase tracking-widest">{day}</span>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-slate-400 font-mono">
                       {dayTasks.length}
                     </span>
                   </div>
@@ -286,10 +286,10 @@ export default function OperationsCalendar() {
                               <span className="text-[7px] text-slate-500 font-mono">{task.time}</span>
                             </div>
 
-                            <h4 className="text-[11px] font-bold text-slate-200 mt-1 leading-tight">
+                            <h4 className="text-[13px] font-bold text-slate-200 mt-1 leading-tight">
                               {task.title}
                             </h4>
-                            <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
+                            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
                               {task.detail}
                             </p>
                           </div>
@@ -309,7 +309,7 @@ export default function OperationsCalendar() {
 
                             <button
                               onClick={() => handleDeleteTask(task.id)}
-                              className="text-[9px] text-slate-500 hover:text-red-400 transition-colors"
+                              className="text-[10px] text-slate-500 hover:text-red-400 transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -351,14 +351,14 @@ export default function OperationsCalendar() {
             </div>
 
             <div className="space-y-2">
-              <div className="grid grid-cols-7 text-center text-xs font-bold text-slate-500 uppercase tracking-widest pb-2 border-b border-slate-850">
+              <div className="grid grid-cols-7 text-center text-[13px] font-bold text-slate-500 uppercase tracking-widest pb-2 border-b border-slate-850">
                 <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
               </div>
 
               <div className="grid grid-cols-7 gap-2">
                 {prevDays.map((day, idx) => (
                   <div key={`prev-${idx}`} className="h-24 bg-slate-950/20 border border-slate-900/30 rounded-xl p-2 opacity-20 cursor-not-allowed select-none">
-                    <span className="text-[10px] font-mono">{day}</span>
+                    <span className="text-[11px] font-mono">{day}</span>
                   </div>
                 ))}
 
@@ -381,7 +381,7 @@ export default function OperationsCalendar() {
                       }`}
                     >
                       <div className="flex justify-between items-center">
-                        <span className={`text-[10px] font-mono font-bold ${isSelected ? 'text-brand-cyan' : isToday ? 'text-brand-pink' : 'text-slate-400'}`}>
+                        <span className={`text-[11px] font-mono font-bold ${isSelected ? 'text-brand-cyan' : isToday ? 'text-brand-pink' : 'text-slate-400'}`}>
                           {day}
                         </span>
                       </div>
@@ -400,7 +400,7 @@ export default function OperationsCalendar() {
 
                 {nextDays.map((day, idx) => (
                   <div key={`next-${idx}`} className="h-24 bg-slate-950/20 border border-slate-900/30 rounded-xl p-2 opacity-20 cursor-not-allowed select-none">
-                    <span className="text-[10px] font-mono">{day}</span>
+                    <span className="text-[11px] font-mono">{day}</span>
                   </div>
                 ))}
               </div>
@@ -421,12 +421,12 @@ export default function OperationsCalendar() {
                 monthlyEvents.filter(e => e.date === selectedDateStr).map((ev) => (
                   <div key={ev.id} className="border border-brand-blue/30 rounded-xl p-4 bg-slate-950/30 space-y-2">
                     <span className="text-[8px] uppercase font-bold px-2 py-0.5 rounded border bg-indigo-950/40 text-indigo-400 border-indigo-900/40">{ev.type}</span>
-                    <h4 className="text-xs font-bold text-slate-100">{ev.title}</h4>
-                    <p className="text-[10px] text-slate-400">{ev.client}</p>
+                    <h4 className="text-[13px] font-bold text-slate-100">{ev.title}</h4>
+                    <p className="text-[11px] text-slate-400">{ev.client}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-slate-500 text-center py-10">No events scheduled.</p>
+                <p className="text-[13px] text-slate-500 text-center py-10">No events scheduled.</p>
               )}
             </div>
           </div>
@@ -452,11 +452,11 @@ export default function OperationsCalendar() {
             <form onSubmit={handleAddTask} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Weekday</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Weekday</label>
                   <select
                     value={taskDay}
                     onChange={(e) => setTaskDay(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                   >
                     {weekdays.map(d => (
                       <option key={d} value={d}>{d}</option>
@@ -465,11 +465,11 @@ export default function OperationsCalendar() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
                   <select
                     value={taskCategory}
                     onChange={(e) => setTaskCategory(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                   >
                     <option value="ops">💼 Operations</option>
                     <option value="analytics">📈 Analytics Check</option>
@@ -479,31 +479,31 @@ export default function OperationsCalendar() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Task Title</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Task Title</label>
                 <input
                   type="text"
                   required
                   placeholder="E.g., Share pouch mockups on FB"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Description Details</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description Details</label>
                 <textarea
                   rows="3"
                   placeholder="Detail notes..."
                   value={taskDetail}
                   onChange={(e) => setTaskDetail(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
                 ></textarea>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/10 transition-all"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white text-[13px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/10 transition-all"
               >
                 <span>Add to Weekly Board</span>
               </button>

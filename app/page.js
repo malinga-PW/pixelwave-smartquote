@@ -27,6 +27,7 @@ export default function Home() {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   // Check session on mount
   useEffect(() => {
@@ -278,38 +279,23 @@ export default function Home() {
     : 'bg-slate-50 text-slate-900';
 
   return (
-    <div className={`flex min-h-screen ${themeClass} selection:bg-brand-blue selection:text-white`}>
+    <div className={`flex h-screen overflow-hidden ${themeClass} selection:bg-brand-blue selection:text-white`}>
       {/* macOS-style Top Status Bar */}
-      <TopBar isDark={isDark} setIsDark={setIsDark} onLogout={handleLogout} />
+      <TopBar isDark={isDark} setIsDark={setIsDark} onLogout={handleLogout} isSupabaseConnected={isSupabaseConnected} />
 
-      {/* Sidebar Navigation — shift down 28px for topbar */}
-      <div className="pt-7 flex flex-1">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isDark={isDark} />
+      {/* Sidebar + Main — shift down 28px for topbar */}
+      <div className="pt-7 flex flex-1 min-h-0">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isDark={isDark} expanded={sidebarExpanded} setExpanded={setSidebarExpanded} />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-y-auto">
         {/* Notification Banner */}
         {notification && (
           <div className="fixed bottom-6 right-6 z-50 bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2 max-w-sm animate-bounce no-print">
             <span className="w-2 h-2 rounded-full bg-brand-cyan animate-pulse"></span>
-            <span className="text-xs font-semibold text-slate-200">{notification.message}</span>
+            <span className="text-[13px] font-semibold text-slate-200">{notification.message}</span>
           </div>
         )}
-
-        {/* Dynamic Panel Header */}
-        <header className="border-b border-slate-800/60 bg-slate-950/20 px-8 py-5 flex items-center justify-between no-print">
-          <div className="flex items-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${isSupabaseConnected ? 'bg-emerald-400' : 'bg-brand-cyan animate-pulse'}`}></span>
-            <span className="text-xs font-mono text-slate-400">
-              {isSupabaseConnected 
-                ? 'Database: Connected (Supabase Cloud Sync active)' 
-                : 'Database: Offline Demo Mode (Mock storage active)'}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-500 font-medium">Domain: smartquote.pixelwave.lk</span>
-          </div>
-        </header>
 
         {/* Tabs Render Routing */}
         <div className="flex-1 p-8">
@@ -331,6 +317,7 @@ export default function Home() {
               onConvertDocument={handleConvertDocument}
               documents={documents}
               isDark={isDark}
+              setActiveTab={setActiveTab}
             />
           )}
 

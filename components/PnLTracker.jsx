@@ -249,7 +249,7 @@ export default function PnLTracker({ isDark = true }) {
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setSelectedMonth(null)}
-              className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === null ? `bg-brand-blue/20 border-brand-blue ${isDark ? 'text-white' : 'text-brand-blue shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
+              className={`px-3 py-1 rounded-xl text-[11px] font-bold border transition-all ${selectedMonth === null ? `bg-brand-blue/20 border-brand-blue ${isDark ? 'text-white' : 'text-brand-blue shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
             >
               Full Year
             </button>
@@ -257,7 +257,7 @@ export default function PnLTracker({ isDark = true }) {
               <button
                 key={m}
                 onClick={() => setSelectedMonth(i + 1)}
-                className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === i + 1 ? `bg-brand-pink/20 border-brand-pink ${isDark ? 'text-white' : 'text-brand-pink shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
+                className={`px-3 py-1 rounded-xl text-[11px] font-bold border transition-all ${selectedMonth === i + 1 ? `bg-brand-pink/20 border-brand-pink ${isDark ? 'text-white' : 'text-brand-pink shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
               >
                 {m}
               </button>
@@ -265,10 +265,10 @@ export default function PnLTracker({ isDark = true }) {
           </div>
 
           {/* Add buttons */}
-          <button onClick={() => setShowAddRevenue(true)} className="px-3 py-2 rounded-xl bg-emerald-950/30 border border-emerald-900/40 text-emerald-400 text-[10px] font-bold flex items-center gap-1.5 hover:border-emerald-700 transition-all">
+          <button onClick={() => setShowAddRevenue(true)} className="px-3 py-2 rounded-xl bg-emerald-950/30 border border-emerald-900/40 text-emerald-400 text-[11px] font-bold flex items-center gap-1.5 hover:border-emerald-700 transition-all">
             <Plus className="w-3 h-3" /> Revenue
           </button>
-          <button onClick={() => setShowAddExpense(true)} className="px-3 py-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-[10px] font-bold flex items-center gap-1.5 shadow-lg shadow-brand-blue/10 hover:-translate-y-0.5 transition-all">
+          <button onClick={() => setShowAddExpense(true)} className="px-3 py-2 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg shadow-brand-blue/10 hover:-translate-y-0.5 transition-all">
             <Plus className="w-3 h-3" /> Expense
           </button>
         </div>
@@ -287,9 +287,9 @@ export default function PnLTracker({ isDark = true }) {
             <div key={i} className={`glass-panel rounded-2xl p-5 border-l-4 ${kpi.color} relative overflow-hidden group`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{kpi.label}</p>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{kpi.label}</p>
                   <p className={`text-xl font-bold font-mono mt-1 ${kpi.textColor}`}>{kpi.val}</p>
-                  <p className="text-[9px] text-slate-500 mt-0.5">{kpi.sub}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{kpi.sub}</p>
                 </div>
                 <Icon className={`w-5 h-5 ${kpi.textColor} opacity-60`} />
               </div>
@@ -302,7 +302,7 @@ export default function PnLTracker({ isDark = true }) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Trend Area Chart (span 8) */}
         <div className="md:col-span-8 glass-panel rounded-2xl p-5 border border-slate-800/80 space-y-3">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Monthly Revenue vs Expenses Trend</h3>
+          <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Monthly Revenue vs Expenses Trend</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
@@ -337,7 +337,7 @@ export default function PnLTracker({ isDark = true }) {
             {[{c:'#10b981',l:'Revenue'},{c:'#ef4444',l:'Expenses'},{c:'#009eff',l:'Net Profit'}].map(x => (
               <div key={x.l} className="flex items-center gap-1.5">
                 <span className="w-3 h-0.5 inline-block rounded" style={{backgroundColor:x.c}}></span>
-                <span className="text-[9px] text-slate-400 font-semibold">{x.l}</span>
+                <span className="text-[10px] text-slate-400 font-semibold">{x.l}</span>
               </div>
             ))}
           </div>
@@ -345,7 +345,7 @@ export default function PnLTracker({ isDark = true }) {
 
         {/* Expense Donut (span 4) */}
         <div className="md:col-span-4 glass-panel rounded-2xl p-5 border border-slate-800/80 space-y-4">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Expense Breakdown</h3>
+          <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Expense Breakdown</h3>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={catTotals.filter(c => c.total > 0)} layout="vertical" margin={{ left: 0, right: 10 }}>
@@ -372,11 +372,11 @@ export default function PnLTracker({ isDark = true }) {
                 <div key={cat.id} className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5">
                     <Icon className="w-3 h-3" style={{ color: cat.color }} />
-                    <span className="text-[9px] text-slate-400 font-semibold">{cat.label}</span>
+                    <span className="text-[10px] text-slate-400 font-semibold">{cat.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-slate-500">{pct}%</span>
-                    <span className="text-[10px] font-bold font-mono text-slate-200">{fmt(cat.total)}</span>
+                    <span className="text-[10px] text-slate-500">{pct}%</span>
+                    <span className="text-[11px] font-bold font-mono text-slate-200">{fmt(cat.total)}</span>
                   </div>
                 </div>
               );
@@ -389,7 +389,7 @@ export default function PnLTracker({ isDark = true }) {
       <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 space-y-4">
         <div className="flex justify-between items-center border-b border-slate-850 pb-3">
           <h3 className="text-sm font-bold text-white tracking-wider uppercase">Expense Log by Category</h3>
-          <span className="text-[10px] font-mono text-slate-500">{selectedMonth ? MONTHS[selectedMonth-1] : `Full Year ${selectedYear}`}</span>
+          <span className="text-[11px] font-mono text-slate-500">{selectedMonth ? MONTHS[selectedMonth-1] : `Full Year ${selectedYear}`}</span>
         </div>
 
         <div className="space-y-3">
@@ -406,8 +406,8 @@ export default function PnLTracker({ isDark = true }) {
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon className="w-4 h-4" style={{ color: cat.color }} />
-                    <span className="text-xs font-bold text-white">{cat.label}</span>
-                    <span className="text-[9px] text-slate-500 bg-slate-950/40 px-1.5 py-0.5 rounded font-mono">{cat.items.length} entries</span>
+                    <span className="text-[13px] font-bold text-white">{cat.label}</span>
+                    <span className="text-[10px] text-slate-500 bg-slate-950/40 px-1.5 py-0.5 rounded font-mono">{cat.items.length} entries</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-bold font-mono" style={{ color: cat.color }}>{fmt(cat.total)}</span>
@@ -422,8 +422,8 @@ export default function PnLTracker({ isDark = true }) {
                       <div key={item.id} className="flex items-center justify-between px-5 py-2.5 group hover:bg-slate-900/20 transition-colors">
                         <div className="flex items-center gap-3">
                           <div>
-                            <p className="text-xs font-semibold text-slate-200">{item.description}</p>
-                            <p className="text-[9px] text-slate-500 font-mono mt-0.5">
+                            <p className="text-[13px] font-semibold text-slate-200">{item.description}</p>
+                            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
                               {MONTHS[item.month - 1]} {item.year}
                               {item.recurring && <span className="ml-1 text-brand-cyan">↻ Recurring</span>}
                             </p>
@@ -461,28 +461,28 @@ export default function PnLTracker({ isDark = true }) {
             </div>
             <form onSubmit={handleAddExpense} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Expense Category</label>
-                <select value={fCat} onChange={e => setFCat(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Expense Category</label>
+                <select value={fCat} onChange={e => setFCat(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue">
                   {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Description</label>
-                <input required type="text" value={fDesc} onChange={e => setFDesc(e.target.value)} placeholder="E.g. Hostinger Premium Plan renewal" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue" />
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Description</label>
+                <input required type="text" value={fDesc} onChange={e => setFDesc(e.target.value)} placeholder="E.g. Hostinger Premium Plan renewal" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Amount (LKR)</label>
-                  <input required type="number" min="0" value={fAmt} onChange={e => setFAmt(e.target.value)} placeholder="0.00" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-red-300 focus:outline-none focus:border-brand-blue font-mono" />
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Amount (LKR)</label>
+                  <input required type="number" min="0" value={fAmt} onChange={e => setFAmt(e.target.value)} placeholder="0.00" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-red-300 focus:outline-none focus:border-brand-blue font-mono" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Month</label>
-                  <select value={fMonth} onChange={e => setFMonth(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Month</label>
+                  <select value={fMonth} onChange={e => setFMonth(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue">
                     {MONTHS.map((m, i) => <option key={m} value={i+1}>{m} {selectedYear}</option>)}
                   </select>
                 </div>
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-900/60 to-red-800/40 border border-red-800 hover:border-red-700 text-red-300 text-xs font-bold transition-all">
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-900/60 to-red-800/40 border border-red-800 hover:border-red-700 text-red-300 text-[13px] font-bold transition-all">
                 Log Expense Entry
               </button>
             </form>
@@ -503,17 +503,17 @@ export default function PnLTracker({ isDark = true }) {
             </div>
             <form onSubmit={handleAddRevenue} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Revenue Amount (LKR)</label>
-                <input required type="number" min="0" value={fRev} onChange={e => setFRev(e.target.value)} placeholder="E.g. 250000" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-emerald-300 focus:outline-none focus:border-emerald-700 font-mono text-sm" />
-                <p className="text-[9px] text-slate-500">This amount is added to the selected month's revenue total.</p>
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Revenue Amount (LKR)</label>
+                <input required type="number" min="0" value={fRev} onChange={e => setFRev(e.target.value)} placeholder="E.g. 250000" className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-emerald-300 focus:outline-none focus:border-emerald-700 font-mono text-sm" />
+                <p className="text-[10px] text-slate-500">This amount is added to the selected month's revenue total.</p>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Month</label>
-                <select value={fRevMonth} onChange={e => setFRevMonth(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Month</label>
+                <select value={fRevMonth} onChange={e => setFRevMonth(e.target.value)} className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue">
                   {MONTHS.map((m, i) => <option key={m} value={i+1}>{m} {selectedYear}</option>)}
                 </select>
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-950/60 to-emerald-900/40 border border-emerald-800 hover:border-emerald-700 text-emerald-300 text-xs font-bold transition-all">
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-950/60 to-emerald-900/40 border border-emerald-800 hover:border-emerald-700 text-emerald-300 text-[13px] font-bold transition-all">
                 Add Revenue Entry
               </button>
             </form>

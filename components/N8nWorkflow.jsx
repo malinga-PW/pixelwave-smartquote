@@ -110,143 +110,143 @@ export default function N8nWorkflow() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             n8n AI Agent Workflow
           </h2>
-          <p className="text-slate-400 text-sm">
-            Configure and monitor your n8n (v2.23.4) Agent node that parses, writes, and issues documents automatically.
+          <p className="text-slate-400 text-[13px]">
+            Configure and monitor your n8n Agent node that parses, writes, and issues documents automatically.
           </p>
         </div>
         <button
           onClick={runSimulation}
           disabled={isExecuting}
-          className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 ${
+          className={`px-3 py-2 rounded-xl text-[12px] font-semibold flex items-center gap-2 transition-all duration-300 ${
             isExecuting 
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' 
               : 'bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white shadow-lg shadow-brand-blue/10 transform hover:-translate-y-0.5'
           }`}
         >
-          <Play className="w-4 h-4" />
+          <Play className="w-3.5 h-3.5" />
           <span>{isExecuting ? 'Workflow Running...' : 'Execute Test Flow'}</span>
         </button>
       </div>
 
       {/* Visual Workflow Canvas */}
-      <div className="glass-panel rounded-2xl p-8 relative overflow-hidden bg-slate-950/20 border border-slate-800/80">
+      <div className="glass-panel rounded-2xl p-5 relative overflow-hidden bg-slate-950/20 border border-slate-800/80">
         {/* Connection Pulse Path (Background SVGs) */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             {/* Connection Line 1 */}
-            <path d="M190,140 L340,140" stroke="#1e293b" strokeWidth="2" fill="none" />
+            <path d="M160,110 L280,110" stroke="#1e293b" strokeWidth="2" fill="none" />
             {isExecuting && activeStep >= 1 && (
-              <path d="M190,140 L340,140" stroke="#009eff" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
+              <path d="M160,110 L280,110" stroke="#009eff" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
             )}
 
             {/* Connection Line 2 */}
-            <path d="M490,140 L640,140" stroke="#1e293b" strokeWidth="2" fill="none" />
+            <path d="M400,110 L520,110" stroke="#1e293b" strokeWidth="2" fill="none" />
             {isExecuting && activeStep >= 5 && (
-              <path d="M490,140 L640,140" stroke="#fc0fc0" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
+              <path d="M400,110 L520,110" stroke="#fc0fc0" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
             )}
 
             {/* Connection Line 3 */}
-            <path d="M790,140 L940,140" stroke="#1e293b" strokeWidth="2" fill="none" />
+            <path d="M640,110 L760,110" stroke="#1e293b" strokeWidth="2" fill="none" />
             {isExecuting && activeStep >= 8 && (
-              <path d="M790,140 L940,140" stroke="#10b981" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
+              <path d="M640,110 L760,110" stroke="#10b981" strokeWidth="2.5" fill="none" className="animate-pulse-flow" />
             )}
           </svg>
         </div>
 
         {/* Nodes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
           {/* Node 1: Trigger */}
           <div 
             onClick={() => setSelectedNode('trigger')}
-            className={`cursor-pointer rounded-2xl p-5 border text-center transition-all duration-300 ${
+            className={`cursor-pointer rounded-xl p-3 border text-center transition-all duration-300 ${
               selectedNode === 'trigger' 
                 ? 'bg-slate-900/90 border-brand-cyan shadow-lg shadow-brand-blue/5' 
                 : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
             } ${nodeStates.trigger === 'active' ? 'ring-2 ring-brand-cyan/50 animate-pulse' : ''}`}
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-4">
-              <Code className={`w-5 h-5 ${nodeStates.trigger === 'success' ? 'text-emerald-400' : 'text-brand-cyan'}`} />
+            <div className="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-3">
+              <Code className={`w-4 h-4 ${nodeStates.trigger === 'success' ? 'text-emerald-400' : 'text-brand-cyan'}`} />
             </div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Webhook Trigger</h3>
-            <p className="text-[10px] text-slate-500 mt-2">v2.23.4 Webhook Node</p>
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Webhook Trigger</h3>
+            <p className="text-[10px] text-slate-500 mt-1">v2.23.4 Webhook Node</p>
             {nodeStates.trigger === 'success' && (
-              <span className="text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
+              <span className="text-[10px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
             )}
           </div>
 
           {/* Node 2: AI Agent Node */}
           <div 
             onClick={() => setSelectedNode('agent')}
-            className={`cursor-pointer rounded-2xl p-5 border text-center transition-all duration-300 ${
+            className={`cursor-pointer rounded-xl p-3 border text-center transition-all duration-300 ${
               selectedNode === 'agent' 
                 ? 'bg-slate-900/90 border-brand-pink shadow-lg shadow-brand-pink/5' 
                 : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
             } ${nodeStates.agent === 'active' ? 'ring-2 ring-brand-pink/50 animate-pulse' : ''}`}
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-4">
-              <Cpu className={`w-5 h-5 ${nodeStates.agent === 'success' ? 'text-emerald-400' : 'text-brand-pink'}`} />
+            <div className="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-3">
+              <Cpu className={`w-4 h-4 ${nodeStates.agent === 'success' ? 'text-emerald-400' : 'text-brand-pink'}`} />
             </div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">AI Agent Node</h3>
-            <p className="text-[10px] text-slate-500 mt-2">Gemini / Claude Engine</p>
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">AI Agent Node</h3>
+            <p className="text-[10px] text-slate-500 mt-1">Gemini / Claude Engine</p>
             {nodeStates.agent === 'success' && (
-              <span className="text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
+              <span className="text-[10px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
             )}
           </div>
 
           {/* Node 3: Database Node */}
           <div 
             onClick={() => setSelectedNode('database')}
-            className={`cursor-pointer rounded-2xl p-5 border text-center transition-all duration-300 ${
+            className={`cursor-pointer rounded-xl p-3 border text-center transition-all duration-300 ${
               selectedNode === 'database' 
                 ? 'bg-slate-900/90 border-emerald-500 shadow-lg shadow-emerald-500/5' 
                 : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
             } ${nodeStates.database === 'active' ? 'ring-2 ring-emerald-500/50 animate-pulse' : ''}`}
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-4">
-              <Database className={`w-5 h-5 ${nodeStates.database === 'success' ? 'text-emerald-400' : 'text-emerald-400'}`} />
+            <div className="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-3">
+              <Database className={`w-4 h-4 ${nodeStates.database === 'success' ? 'text-emerald-400' : 'text-emerald-400'}`} />
             </div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Supabase DB Node</h3>
-            <p className="text-[10px] text-slate-500 mt-2">Sync State Node</p>
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Supabase DB Node</h3>
+            <p className="text-[10px] text-slate-500 mt-1">Sync State Node</p>
             {nodeStates.database === 'success' && (
-              <span className="text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
+              <span className="text-[10px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
             )}
           </div>
 
           {/* Node 4: Channels */}
           <div 
             onClick={() => setSelectedNode('channels')}
-            className={`cursor-pointer rounded-2xl p-5 border text-center transition-all duration-300 ${
+            className={`cursor-pointer rounded-xl p-3 border text-center transition-all duration-300 ${
               selectedNode === 'channels' 
                 ? 'bg-slate-900/90 border-brand-blue shadow-lg shadow-brand-blue/5' 
                 : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
             } ${nodeStates.channels === 'active' ? 'ring-2 ring-brand-blue/50 animate-pulse' : ''}`}
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className={`w-5 h-5 ${nodeStates.channels === 'success' ? 'text-emerald-400' : 'text-brand-blue'}`} />
+            <div className="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto mb-3">
+              <MessageSquare className={`w-4 h-4 ${nodeStates.channels === 'success' ? 'text-emerald-400' : 'text-brand-blue'}`} />
             </div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Notification Hub</h3>
-            <p className="text-[10px] text-slate-500 mt-2">WhatsApp & Email Link</p>
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Notification Hub</h3>
+            <p className="text-[10px] text-slate-500 mt-1">WhatsApp & Email Link</p>
             {nodeStates.channels === 'success' && (
-              <span className="text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
+              <span className="text-[10px] mt-2 inline-block px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">Success</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Grid: Selected Node Properties & Execution Terminal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Node Properties Panel */}
-        <div className="glass-panel rounded-2xl p-6 space-y-4 relative">
-          <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
-            <h3 className="text-sm font-bold text-white tracking-wider uppercase flex items-center gap-2">
-              <Settings className="w-4 h-4 text-brand-cyan" />
+        <div className="glass-panel rounded-2xl p-4 space-y-3 relative">
+          <div className="flex justify-between items-center border-b border-slate-800/80 pb-2">
+            <h3 className="text-[12px] font-bold text-white tracking-wider uppercase flex items-center gap-2">
+              <Settings className="w-3.5 h-3.5 text-brand-cyan" />
               <span>Node Config: {nodes[selectedNode].title}</span>
             </h3>
             <span className="text-[10px] px-2 py-0.5 rounded bg-slate-850 border border-slate-750 text-slate-400 font-mono">
@@ -254,14 +254,14 @@ export default function N8nWorkflow() {
             </span>
           </div>
 
-          <p className="text-xs text-slate-400 font-medium leading-relaxed">
+          <p className="text-[12px] text-slate-400 font-medium leading-relaxed">
             {nodes[selectedNode].desc}
           </p>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2">
             {Object.entries(nodes[selectedNode].config).map(([key, val]) => (
-              <div key={key} className="text-xs bg-slate-950/30 border border-slate-850 p-3 rounded-xl">
-                <span className="text-[10px] font-bold text-brand-cyan uppercase block tracking-wider mb-1">
+              <div key={key} className="text-[12px] bg-slate-950/30 border border-slate-850 p-2.5 rounded-xl">
+                <span className="text-[10px] font-bold text-brand-cyan uppercase block tracking-wider mb-0.5">
                   {key.replace('_', ' ')}
                 </span>
                 {Array.isArray(val) ? (
@@ -273,7 +273,7 @@ export default function N8nWorkflow() {
                     ))}
                   </div>
                 ) : (
-                  <p className="font-mono text-slate-200 mt-0.5 break-words">{val}</p>
+                  <p className="font-mono text-slate-200 mt-0.5 break-words text-[12px]">{val}</p>
                 )}
               </div>
             ))}
@@ -281,20 +281,20 @@ export default function N8nWorkflow() {
         </div>
 
         {/* Execution Terminal */}
-        <div className="glass-panel rounded-2xl p-6 bg-[#040811] border border-slate-900 space-y-4">
-          <div className="flex justify-between items-center border-b border-slate-900 pb-3">
-            <h3 className="text-sm font-bold text-white tracking-wider uppercase flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-brand-pink" />
+        <div className="glass-panel rounded-2xl p-4 bg-[#040811] border border-slate-900 space-y-3">
+          <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+            <h3 className="text-[12px] font-bold text-white tracking-wider uppercase flex items-center gap-2">
+              <Terminal className="w-3.5 h-3.5 text-brand-pink" />
               <span>n8n Run Log Terminal</span>
             </h3>
             <div className="flex gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+              <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
+              <span className="w-2 h-2 rounded-full bg-amber-500/80"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
             </div>
           </div>
 
-          <div className="h-64 overflow-y-auto space-y-2.5 font-mono text-[11px] text-slate-300 pr-2">
+          <div className="h-48 overflow-y-auto space-y-2 font-mono text-[12px] text-slate-300 pr-2">
             {executionLogs.length > 0 ? (
               executionLogs.map((log, idx) => (
                 <div key={idx} className="fade-in">
@@ -307,7 +307,7 @@ export default function N8nWorkflow() {
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-600 gap-2">
                 <Terminal className="w-8 h-8 opacity-40 animate-pulse" />
-                <p className="text-[10px]">Click "Execute Test Flow" to trigger the n8n simulation.</p>
+                <p className="text-[11px]">Click "Execute Test Flow" to trigger the n8n simulation.</p>
               </div>
             )}
           </div>

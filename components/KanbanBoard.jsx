@@ -91,8 +91,8 @@ export default function KanbanBoard() {
             >
               {/* Column Title */}
               <div className={`border-t-4 ${col.color} pt-3 pb-2 border-b border-slate-900 flex justify-between items-center`}>
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">{col.title}</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 font-mono">
+                <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">{col.title}</h3>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 font-mono">
                   {colOrders.length}
                 </span>
               </div>
@@ -109,16 +109,16 @@ export default function KanbanBoard() {
                     >
                       <div className="space-y-1">
                         <span className="text-[8px] font-mono text-slate-500 font-bold block">{order.id}</span>
-                        <h4 className="text-xs font-bold text-slate-200 mt-1 leading-snug group-hover:text-brand-cyan transition-colors">
+                        <h4 className="text-[13px] font-bold text-slate-200 mt-1 leading-snug group-hover:text-brand-cyan transition-colors">
                           {order.title}
                         </h4>
-                        <p className="text-[10px] text-slate-400 leading-normal font-medium mt-0.5">
+                        <p className="text-[11px] text-slate-400 leading-normal font-medium mt-0.5">
                           {order.desc}
                         </p>
                       </div>
 
                       {/* Card Footer: Metadata and Shifters */}
-                      <div className="border-t border-slate-900/60 pt-2.5 flex justify-between items-center text-[9px] text-slate-500 font-semibold no-print">
+                      <div className="border-t border-slate-900/60 pt-2.5 flex justify-between items-center text-[10px] text-slate-500 font-semibold no-print">
                         <span>{order.client}</span>
                         
                         <div className="flex gap-1">
@@ -145,7 +145,7 @@ export default function KanbanBoard() {
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center border border-dashed border-slate-900/50 rounded-2xl text-slate-700 py-16">
                     <CheckCircle2 className="w-6 h-6 opacity-20 mb-1" />
-                    <span className="text-[9px] font-medium">Empty Column</span>
+                    <span className="text-[10px] font-medium">Empty Column</span>
                   </div>
                 )}
               </div>

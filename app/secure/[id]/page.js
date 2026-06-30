@@ -181,7 +181,7 @@ export default function SecurePortalPage() {
             {error || 'This document link is invalid, expired, or you do not have permission to view it.'}
           </p>
           <div className="pt-2">
-            <p className="text-[10px] text-slate-500 font-mono">PixelWave Security Gateway v1.0.3</p>
+            <p className="text-[11px] text-slate-500 font-mono">PixelWave Security Gateway v1.0.3</p>
           </div>
         </div>
       </div>
@@ -197,12 +197,12 @@ export default function SecurePortalPage() {
       {/* Main Container */}
       <div className="max-w-4xl mx-auto space-y-6 relative z-10">
         {/* Header Indicator */}
-        <div className="flex justify-between items-center text-xs text-slate-500 border-b border-slate-900 pb-4 no-print">
+        <div className="flex justify-between items-center text-[13px] text-slate-500 border-b border-slate-900 pb-4 no-print">
           <div className="flex items-center gap-1.5 font-bold text-brand-cyan">
             <ShieldCheck className="w-4 h-4" />
             <span>End-to-End Encrypted Session</span>
           </div>
-          <span className="font-mono text-[10px]">{doc.quote_no}</span>
+          <span className="font-mono text-[11px]">{doc.quote_no}</span>
         </div>
 
         {/* Client Portal Render */}

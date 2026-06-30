@@ -110,7 +110,7 @@ function ServiceRateTable({ services, markup, currency, onSendToDocBuilder }) {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-12 text-[9px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1 border-b border-slate-850">
+      <div className="grid grid-cols-12 text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1 border-b border-slate-850">
         <div className="col-span-4">Service</div>
         <div className="col-span-2 text-center">Unit</div>
         <div className="col-span-2 text-right">Base Rate</div>
@@ -124,25 +124,25 @@ function ServiceRateTable({ services, markup, currency, onSendToDocBuilder }) {
         return (
           <div key={i} className="grid grid-cols-12 items-center bg-slate-950/30 px-3 py-2.5 rounded-xl border border-slate-850 hover:border-slate-750 transition-colors group">
             <div className="col-span-4">
-              <p className="text-xs font-semibold text-slate-200 group-hover:text-brand-cyan transition-colors">{svc.label}</p>
+              <p className="text-[13px] font-semibold text-slate-200 group-hover:text-brand-cyan transition-colors">{svc.label}</p>
             </div>
             <div className="col-span-2 text-center">
-              <span className="text-[9px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">{svc.unit}</span>
+              <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">{svc.unit}</span>
             </div>
             <div className="col-span-2 text-right">
-              <span className="text-[10px] font-mono text-slate-400">{fmt(svc.rate, currency)}</span>
+              <span className="text-[11px] font-mono text-slate-400">{fmt(svc.rate, currency)}</span>
             </div>
             <div className="col-span-2 flex justify-center items-center gap-1.5">
               <button onClick={() => setQtys(q => ({ ...q, [i]: Math.max(1, (q[i] || 1) - 1) }))} className="w-5 h-5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 flex items-center justify-center transition-colors">
                 <Minus className="w-2.5 h-2.5" />
               </button>
-              <span className="text-xs font-mono text-slate-200 w-6 text-center">{qty}</span>
+              <span className="text-[13px] font-mono text-slate-200 w-6 text-center">{qty}</span>
               <button onClick={() => setQtys(q => ({ ...q, [i]: (q[i] || 1) + 1 }))} className="w-5 h-5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 flex items-center justify-center transition-colors">
                 <Plus className="w-2.5 h-2.5" />
               </button>
             </div>
             <div className="col-span-2 flex justify-end items-center gap-2">
-              <span className="text-xs font-bold font-mono text-white">{fmt(lineTotal, currency)}</span>
+              <span className="text-[13px] font-bold font-mono text-white">{fmt(lineTotal, currency)}</span>
               <button 
                 onClick={() => onSendToDocBuilder({ title: svc.label, unit: svc.unit, rate: lineTotal, qty })}
                 className="opacity-0 group-hover:opacity-100 p-1 rounded bg-brand-blue/20 border border-brand-blue/30 text-brand-cyan transition-all"
@@ -212,7 +212,7 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Material Picker */}
         <div className="space-y-2">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paper / Board Material</label>
+          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Paper / Board Material</label>
           <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
             {materials.map(m => (
               <button
@@ -225,8 +225,8 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
                 }`}
               >
                 <div>
-                  <p className="text-xs font-bold">{m.label}</p>
-                  <p className="text-[9px] text-slate-500 mt-0.5">{m.gsm} GSM — {m.note}</p>
+                  <p className="text-[13px] font-bold">{m.label}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{m.gsm} GSM — {m.note}</p>
                 </div>
               </button>
             ))}
@@ -237,7 +237,7 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
         <div className="space-y-4">
           {/* Sheet Size */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Full Sheet Size</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Full Sheet Size</label>
             <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
               {sheetSizes.map(s => (
                 <button
@@ -249,7 +249,7 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
                     : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`
                   }`}
                 >
-                  <span className="text-[10px] font-bold block">{s.label}</span>
+                  <span className="text-[11px] font-bold block">{s.label}</span>
                   <span className="text-[8px] text-slate-500 font-sans block mt-0.5">Area multiplier: {s.mult}x</span>
                 </button>
               ))}
@@ -259,22 +259,22 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
           {/* Qty + Colors */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quantity (units)</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Quantity (units)</label>
               <input
                 type="number"
                 min={50}
                 step={50}
                 value={qty}
                 onChange={e => setQty(parseInt(e.target.value) || 50)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Print Colors</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Print Colors</label>
               <select
                 value={colors}
                 onChange={e => setColors(parseInt(e.target.value))}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue"
               >
                 <option value={1}>1 Color</option>
                 <option value={2}>2 Colors</option>
@@ -286,7 +286,7 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
 
           {/* Finishing Options */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Finishing Options</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Finishing Options</label>
             <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
               {finishings.map(f => {
                 const isSelected = selectedFinishing.includes(f.id);
@@ -294,7 +294,7 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
                   <button
                     key={f.id}
                     onClick={() => toggleFinishing(f.id)}
-                    className={`px-2.5 py-1.5 rounded-lg border text-left text-[9px] font-semibold transition-all ${
+                    className={`px-2.5 py-1.5 rounded-lg border text-left text-[10px] font-semibold transition-all ${
                       isSelected
                         ? 'bg-brand-cyan/10 border-brand-cyan text-brand-cyan'
                         : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'
@@ -313,11 +313,11 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
       {/* Results Card */}
       <div className="glass-panel rounded-2xl p-5 border border-brand-blue/20 bg-slate-950/30 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-xs font-bold text-brand-cyan uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-[13px] font-bold text-brand-cyan uppercase tracking-wider flex items-center gap-1.5">
             <Calculator className="w-3.5 h-3.5" />
             <span>Live Quote Calculation</span>
           </h3>
-          <span className="text-[9px] text-slate-500 font-mono">{selectedMaterial.label} · {selectedSize.label} · Qty {qty}</span>
+          <span className="text-[10px] text-slate-500 font-mono">{selectedMaterial.label} · {selectedSize.label} · Qty {qty}</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -328,25 +328,25 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
             { label: 'Base Cost/Unit',   val: fmt(baseCostPerUnit, currency),      sub: 'Before markup' },
           ].map((item, i) => (
             <div key={i} className="bg-slate-950/40 rounded-xl p-3 border border-slate-850">
-              <p className="text-[9px] text-slate-500 font-medium">{item.label}</p>
+              <p className="text-[10px] text-slate-500 font-medium">{item.label}</p>
               <p className="text-sm font-bold text-white font-mono mt-1">{item.val}</p>
-              <p className="text-[9px] text-slate-600 mt-0.5">{item.sub}</p>
+              <p className="text-[10px] text-slate-600 mt-0.5">{item.sub}</p>
             </div>
           ))}
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-850 pt-4">
           <div>
-            <p className="text-[10px] text-slate-400 font-medium">Retail Unit Price ({markup}% markup)</p>
+            <p className="text-[11px] text-slate-400 font-medium">Retail Unit Price ({markup}% markup)</p>
             <p className="text-2xl font-bold text-white font-mono">{fmt(retailUnit, currency)}</p>
-            <p className="text-[10px] text-brand-cyan mt-0.5">Grand Total ({qty} units): <span className="font-bold">{fmt(grandTotal, currency)}</span></p>
+            <p className="text-[11px] text-brand-cyan mt-0.5">Grand Total ({qty} units): <span className="font-bold">{fmt(grandTotal, currency)}</span></p>
           </div>
           <button
             onClick={() => {
               onSendToDocBuilder({ title: `${selectedMaterial.label} ${colors}-Color Print (${selectedSize.label})`, unit: 'Units', rate: Math.round(retailUnit), qty });
               confetti({ particleCount: 40, spread: 30 });
             }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-brand-blue/10 transition-all hover:-translate-y-0.5"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-[13px] font-bold flex items-center gap-2 shadow-lg shadow-brand-blue/10 transition-all hover:-translate-y-0.5"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Send to Doc Builder</span>
@@ -358,13 +358,13 @@ function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency
           <button
             onClick={handleOptimize}
             disabled={isOptimizing}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-pink/30 hover:border-brand-pink text-brand-pink text-[10px] font-semibold transition-all"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-pink/30 hover:border-brand-pink text-brand-pink text-[11px] font-semibold transition-all"
           >
             {isOptimizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
             <span>{isOptimizing ? 'Analyzing market data...' : 'Gemini AI Pricing Insight'}</span>
           </button>
           {aiReport && (
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-[10px] text-slate-300 leading-relaxed">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-[11px] text-slate-300 leading-relaxed">
               {aiReport}
             </div>
           )}
@@ -504,7 +504,7 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab, isDark
               <button
                 key={c.code}
                 onClick={() => setSelectedCurrency(c)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all
+                className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all
                   ${selectedCurrency.code === c.code
                   ? isDark ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-900 border border-slate-300 shadow-sm'
                   : isDark ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-900' : 'text-slate-600 hover:text-brand-blue hover:bg-slate-200/50'
@@ -517,7 +517,7 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab, isDark
 
           {/* Markup Slider */}
           <div className="flex items-center gap-2 bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-1.5 no-print">
-            <span className="text-[10px] text-slate-400 font-semibold">Markup:</span>
+            <span className="text-[11px] text-slate-400 font-semibold">Markup:</span>
             <input
               type="range"
               min={10}
@@ -526,13 +526,13 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab, isDark
               onChange={e => setMarkup(parseInt(e.target.value))}
               className="w-20 accent-brand-blue"
             />
-            <span className="text-xs font-bold text-brand-cyan font-mono w-8">{markup}%</span>
+            <span className="text-[13px] font-bold text-brand-cyan font-mono w-8">{markup}%</span>
           </div>
         </div>
       </div>
 
       {notification && (
-        <div className="bg-emerald-950/20 border border-emerald-900/30 px-4 py-3 rounded-xl text-xs text-emerald-400 font-semibold">
+        <div className="bg-emerald-950/20 border border-emerald-900/30 px-4 py-3 rounded-xl text-[13px] text-emerald-400 font-semibold">
           {notification}
         </div>
       )}
@@ -546,7 +546,7 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab, isDark
             <button
               key={tab.id}
               onClick={() => setActiveService(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[13px] font-bold transition-all duration-300 ${
                   isActive
                   ? `bg-gradient-to-r from-brand-blue/20 to-brand-pink/10 border-brand-blue shadow-sm ${isDark ? 'text-white' : 'text-brand-blue border'}`
                   : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`

@@ -196,7 +196,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
+          <span className="text-[11px] uppercase font-bold px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
             Link: smartquote.pixelwave.lk/secure/{activeDocument.id}
           </span>
         </div>
@@ -208,16 +208,16 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" />
-              <span className="text-xs font-bold text-emerald-400">n8n Workflow Webhook Triggered!</span>
+              <span className="text-[13px] font-bold text-emerald-400">n8n Workflow Webhook Triggered!</span>
             </div>
             <button onClick={() => setWebhookLog(null)} className="text-slate-500 hover:text-slate-300">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[11px] text-slate-400">
             A real-time webhook payload was successfully transmitted to your active n8n workflow (v2.23.4).
           </p>
-          <pre className="text-[10px] bg-slate-950 border border-slate-900 rounded-lg p-3 overflow-x-auto text-brand-cyan font-mono leading-relaxed">
+          <pre className="text-[11px] bg-slate-950 border border-slate-900 rounded-lg p-3 overflow-x-auto text-brand-cyan font-mono leading-relaxed">
             {JSON.stringify(webhookLog, null, 2)}
           </pre>
         </div>
@@ -242,23 +242,23 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
                 Pixel<span className="text-[#fc0fc0]">Wave</span> Solutions
               </span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-[13px] text-slate-500 leading-relaxed">
               Premium Packaging & Printing Solutions.<br />
               AI Powered Business Automation Web Services.
             </p>
           </div>
 
           <div className="text-left sm:text-right">
-            <span className="text-[10px] font-bold text-[#0b54fe] uppercase tracking-widest">{activeDocument.type}</span>
+            <span className="text-[11px] font-bold text-[#0b54fe] uppercase tracking-widest">{activeDocument.type}</span>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{activeDocument.quote_no}</h3>
-            <p className="text-xs text-slate-400 mt-1">Issue Date: <span className="font-mono">{activeDocument.issue_date}</span></p>
+            <p className="text-[13px] text-slate-400 mt-1">Issue Date: <span className="font-mono">{activeDocument.issue_date}</span></p>
           </div>
         </div>
 
         {/* Client & Vendor Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-8 border-b border-slate-100 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-8 border-b border-slate-100 text-[13px]">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Issued By</span>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Issued By</span>
             <p className="font-bold text-slate-800">PixelWave Solutions</p>
             <p className="text-slate-500 mt-1 leading-relaxed">
               TechSpace Building, Suite 104,<br />
@@ -268,7 +268,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
           </div>
 
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Prepared For</span>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Prepared For</span>
             <p className="font-bold text-slate-800">{activeDocument.customer_name}</p>
             {activeDocument.customer_email && <p className="text-slate-500 mt-0.5">{activeDocument.customer_email}</p>}
             {activeDocument.customer_phone && <p className="text-slate-500 mt-0.5 font-mono">{activeDocument.customer_phone}</p>}
@@ -280,7 +280,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
 
         {/* Items Table */}
         <div className="py-8">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 font-bold">
                 <th className="py-3 pr-4">Description of Works</th>
@@ -310,13 +310,13 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
         {/* Financial Recap & Signature Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-100">
           {/* Terms */}
-          <div className="text-[10px] text-slate-500 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
             <span className="font-bold text-slate-700 uppercase tracking-wider block mb-1.5">Terms of Business</span>
             <pre className="font-sans whitespace-pre-wrap leading-relaxed">{activeDocument.terms}</pre>
           </div>
 
           {/* Pricing Totals */}
-          <div className="space-y-2.5 text-xs text-slate-600">
+          <div className="space-y-2.5 text-[13px] text-slate-600">
             <div className="flex justify-between items-center">
               <span>Subtotal:</span>
               <span className="font-mono">{activeDocument.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} LKR</span>
@@ -344,19 +344,19 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
         {activeDocument.status === 'Signed' && (
           <div className="mt-8 pt-8 border-t border-dashed border-slate-200 flex justify-end">
             <div className="text-right border border-emerald-100 bg-emerald-50/20 p-4 rounded-xl max-w-xs">
-              <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Contract Authenticated</span>
-              <p className="text-xs font-semibold text-slate-700">Electronically Signed via PixelWave Portal</p>
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Contract Authenticated</span>
+              <p className="text-[13px] font-semibold text-slate-700">Electronically Signed via PixelWave Portal</p>
               <div className="h-10 my-1 flex items-center justify-center font-serif text-lg italic text-[#0b54fe] tracking-wider select-none font-bold">
                 ✓ Secured & Authenticated
               </div>
-              <p className="text-[9px] text-slate-400 font-mono mt-1">Hash: SHA-256/f73e4b9d0...</p>
+              <p className="text-[10px] text-slate-400 font-mono mt-1">Hash: SHA-256/f73e4b9d0...</p>
             </div>
           </div>
         )}
 
         {/* Portal Action Footer (Interactive options depending on document type) */}
         <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 no-print">
-          <div className="text-xs text-slate-400">
+          <div className="text-[13px] text-slate-400">
             Status: <span className="font-bold text-slate-800">{activeDocument.status}</span>
           </div>
 
@@ -365,7 +365,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
             {activeDocument.type === 'Quote' && activeDocument.status === 'Draft' && (
               <button
                 onClick={handleApproveQuote}
-                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#0b54fe] to-[#009eff] hover:from-[#0b54fe]/90 hover:to-[#009eff]/90 text-white text-xs font-bold shadow-lg shadow-blue-500/10 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#0b54fe] to-[#009eff] hover:from-[#0b54fe]/90 hover:to-[#009eff]/90 text-white text-[13px] font-bold shadow-lg shadow-blue-500/10 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
               >
                 <CheckCircle className="w-4 h-4" />
                 <span>Approve & Accept Quote</span>
@@ -377,12 +377,12 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
               <div className="space-y-4 w-full">
                 <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <span className="text-[13px] font-bold text-slate-700 flex items-center gap-1.5">
                       <Signature className="w-4 h-4 text-[#0b54fe]" />
                       <span>E-Signature Authorization</span>
                     </span>
                     
-                    <div className="flex bg-slate-200 p-0.5 rounded-lg text-[9px] font-bold">
+                    <div className="flex bg-slate-200 p-0.5 rounded-lg text-[10px] font-bold">
                       <button 
                         onClick={() => setSignatureType('draw')} 
                         className={`px-2 py-1 rounded-md transition-all ${signatureType === 'draw' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
@@ -426,7 +426,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
                       placeholder="Type your full name to sign agreement"
                       value={typedName}
                       onChange={(e) => setTypedName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#0b54fe]"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-900 focus:outline-none focus:border-[#0b54fe]"
                     />
                   )}
                 </div>
@@ -434,7 +434,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
                 <button
                   onClick={handleExecuteAgreement}
                   disabled={isSigning}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#0b54fe] to-[#fc0fc0] hover:from-[#0b54fe]/90 hover:to-[#fc0fc0]/90 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/10 transition-all transform hover:-translate-y-0.5"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#0b54fe] to-[#fc0fc0] hover:from-[#0b54fe]/90 hover:to-[#fc0fc0]/90 text-white text-[13px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/10 transition-all transform hover:-translate-y-0.5"
                 >
                   {isSigning ? (
                     <>
@@ -455,7 +455,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
             {((activeDocument.type === 'Proforma' || activeDocument.type === 'Invoice') && activeDocument.status !== 'Paid' && !isPaid) && (
               <button
                 onClick={() => setShowPayModal(true)}
-                className="px-6 py-3 rounded-2xl bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold shadow-lg shadow-emerald-500/10 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
+                className="px-6 py-3 rounded-2xl bg-[#10b981] hover:bg-[#059669] text-white text-[13px] font-bold shadow-lg shadow-emerald-500/10 flex items-center gap-2 transition-all transform hover:-translate-y-0.5"
               >
                 <CreditCard className="w-4 h-4" />
                 <span>Settle Invoice via Card</span>
@@ -481,48 +481,48 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">Settle Invoice Payment</h3>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-[13px] text-slate-400">
               Please enter your test payment details to settle quotation <span className="font-mono text-brand-pink font-bold">[{activeDocument.quote_no}]</span>.
             </p>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Amount Due</label>
-                <div className="bg-slate-950/50 border border-slate-900 rounded-xl px-3 py-2 text-xs font-bold text-brand-cyan font-mono">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount Due</label>
+                <div className="bg-slate-950/50 border border-slate-900 rounded-xl px-3 py-2 text-[13px] font-bold text-brand-cyan font-mono">
                   {activeDocument.grand_total.toLocaleString()} LKR
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Card Number</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Card Number</label>
                 <input
                   type="text"
                   placeholder="4000 1234 5678 9010"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Expiry Date</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expiry Date</label>
                   <input
                     type="text"
                     placeholder="MM / YY"
                     value={cardExpiry}
                     onChange={(e) => setCardExpiry(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">CVC</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CVC</label>
                   <input
                     type="text"
                     placeholder="123"
                     value={cardCvc}
                     onChange={(e) => setCardCvc(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+                    className="w-full bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2 text-[13px] text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
                   />
                 </div>
               </div>
@@ -530,7 +530,7 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
               <button
                 type="submit"
                 disabled={isPaying}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-[13px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all"
               >
                 {isPaying ? (
                   <>

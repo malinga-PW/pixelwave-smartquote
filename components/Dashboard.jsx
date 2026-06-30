@@ -11,6 +11,7 @@ import {
 export default function Dashboard({ documents, setViewDocument, setActiveTab }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
+  const [activeBar, setActiveBar] = useState(null);
 
   // Stats Calculations
   const stats = useMemo(() => {
@@ -130,14 +131,14 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-blue relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Estimated Revenue</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Estimated Revenue</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{stats.totalRevenue.toLocaleString()} LKR</h3>
             </div>
             <div className="p-2.5 bg-brand-blue/10 rounded-xl">
               <DollarSign className="w-5 h-5 text-brand-cyan" />
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
+          <div className="mt-3 flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>+24.5% from last month</span>
           </div>
@@ -148,14 +149,14 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-pink relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Approved Quotes</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Approved Quotes</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{stats.approvedQuotes} Documents</h3>
             </div>
             <div className="p-2.5 bg-brand-pink/10 rounded-xl">
               <FileText className="w-5 h-5 text-brand-pink" />
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-slate-400">
+          <div className="mt-3 flex items-center gap-1 text-[11px] text-slate-400">
             <span>Ready for Proforma transition</span>
           </div>
           <div className="absolute right-0 bottom-0 w-24 h-24 bg-gradient-to-tr from-brand-pink/5 to-transparent rounded-full -mr-8 -mb-8 blur-md group-hover:scale-125 transition-transform duration-500"></div>
@@ -165,14 +166,14 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-brand-cyan relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Signatures</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">Pending Signatures</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{stats.pendingSigns} Contracts</h3>
             </div>
             <div className="p-2.5 bg-brand-cyan/10 rounded-xl">
               <ClipboardList className="w-5 h-5 text-brand-cyan" />
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+          <div className="mt-3 flex items-center gap-1 text-[11px] text-amber-400 font-medium">
             <span>Requires client E-sign</span>
           </div>
           <div className="absolute right-0 bottom-0 w-24 h-24 bg-gradient-to-tr from-brand-cyan/5 to-transparent rounded-full -mr-8 -mb-8 blur-md group-hover:scale-125 transition-transform duration-500"></div>
@@ -182,14 +183,14 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
         <div className="glass-panel rounded-2xl p-5 border-l-4 border-l-emerald-500 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">In Production</p>
+              <p className="text-[13px] font-semibold text-slate-400 uppercase tracking-wider">In Production</p>
               <h3 className="text-2xl font-bold text-white mt-1.5">{stats.activeOrders} Work Orders</h3>
             </div>
             <div className="p-2.5 bg-emerald-500/10 rounded-xl">
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-emerald-400">
+          <div className="mt-3 flex items-center gap-1 text-[11px] text-emerald-400">
             <span>Active printing and design run</span>
           </div>
           <div className="absolute right-0 bottom-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full -mr-8 -mb-8 blur-md group-hover:scale-125 transition-transform duration-500"></div>
@@ -204,9 +205,9 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
             <div>
               <h4 className="text-sm font-bold text-white tracking-wider uppercase">Lead to Revenue Conversion Timeline</h4>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] text-slate-400">Conversion rate:</span>
-                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan">{convRate}%</span>
-                <span className="text-[9px] text-slate-600">({totalQuotes}/{totalLeads} leads → quotes)</span>
+                <span className="text-[11px] text-slate-400">Conversion rate:</span>
+                <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan">{convRate}%</span>
+                <span className="text-[10px] text-slate-600">({totalQuotes}/{totalLeads} leads → quotes)</span>
               </div>
             </div>
             {/* Toggle */}
@@ -215,7 +216,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                 <button
                   key={v}
                   onClick={() => setChartView(v)}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-300 ${
                     chartView === v
                       ? 'bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'
@@ -274,10 +275,10 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
             ].map(l => (
               <div key={l.label} className="flex items-center gap-1.5">
                 <div className="h-0.5 w-6" style={{ backgroundColor: l.color, borderStyle: l.dashed ? 'dashed' : 'solid', borderColor: l.color, borderTopWidth: 2, background: 'none' }}></div>
-                <span className="text-[9px] text-slate-400 font-semibold">{l.label}</span>
+                <span className="text-[10px] text-slate-400 font-semibold">{l.label}</span>
               </div>
             ))}
-            <span className="ml-auto text-[9px] text-slate-600 font-mono">{chartView === 'weekly' ? 'This week · Mon–Sun' : 'This quarter · Jan–Jun'}</span>
+            <span className="ml-auto text-[10px] text-slate-600 font-mono">{chartView === 'weekly' ? 'This week · Mon–Sun' : 'This quarter · Jan–Jun'}</span>
           </div>
         </div>
 
@@ -290,14 +291,27 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.3} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
                 <YAxis stroke="#64748b" fontSize={10} tickFormatter={(v) => `${v/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
-                  tickFormatter={(v) => `${v.toLocaleString()} LKR`}
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '11px' }}
+                  labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                  formatter={(value) => [`Rs.${value.toLocaleString()}`, 'Pipeline Value']}
                 />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {chartData.map((entry, index) => {
                     const colors = ['#009eff', '#0b54fe', '#fc0fc0', '#fbbf24', '#10b981'];
-                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={colors[index % colors.length]}
+                        opacity={activeBar === index ? 1 : 0.75}
+                        stroke={activeBar === index ? '#fff' : 'transparent'}
+                        strokeWidth={activeBar === index ? 2 : 0}
+                        onMouseEnter={() => setActiveBar(index)}
+                        onMouseLeave={() => setActiveBar(null)}
+                        style={{ cursor: 'pointer', transition: 'opacity 0.2s, stroke 0.2s' }}
+                      />
+                    );
                   })}
                 </Bar>
               </BarChart>
@@ -318,7 +332,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                 placeholder="Search clients, quote no..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 bg-slate-950/40 border border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors duration-300"
+                className="w-64 bg-slate-950/40 border border-slate-800 rounded-xl py-2 pl-9 pr-4 text-[13px] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-blue transition-colors duration-300"
               />
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
             </div>
@@ -329,7 +343,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                 <button
                   key={t}
                   onClick={() => setFilterType(t)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                  className={`px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-300 ${
                     filterType === t
                       ? 'bg-gradient-to-r from-brand-blue to-brand-pink text-white shadow-md'
                       : 'text-slate-400 hover:text-slate-200'
@@ -346,7 +360,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
         <div className="overflow-x-auto rounded-xl border border-slate-800/60 bg-slate-950/20">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800/80 bg-slate-900/30 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+              <tr className="border-b border-slate-800/80 bg-slate-900/30 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-4">Doc / ID</th>
                 <th className="py-3.5 px-4">Customer</th>
                 <th className="py-3.5 px-4">Issue Date</th>
@@ -356,7 +370,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                 <th className="py-3.5 px-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50 text-xs text-slate-300">
+            <tbody className="divide-y divide-slate-800/50 text-[13px] text-slate-300">
               {filteredDocs.length > 0 ? (
                 filteredDocs.map((doc) => (
                   <tr key={doc.id} className="hover:bg-slate-900/20 transition-all duration-200 group">
@@ -366,12 +380,12 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                     <td className="py-4 px-4">
                       <div>
                         <div className="font-semibold text-slate-200">{doc.customer_name}</div>
-                        <div className="text-[10px] text-slate-500">{doc.customer_email}</div>
+                        <div className="text-[11px] text-slate-500">{doc.customer_email}</div>
                       </div>
                     </td>
                     <td className="py-4 px-4 font-mono text-slate-400">{doc.issue_date}</td>
                     <td className="py-4 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                         doc.type === 'Quote' ? 'bg-indigo-950/40 text-indigo-400 border-indigo-900/50' :
                         doc.type === 'Agreement' ? 'bg-purple-950/40 text-purple-400 border-purple-900/50' :
                         doc.type === 'Order' ? 'bg-amber-950/40 text-amber-400 border-amber-900/50' :
@@ -384,7 +398,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                       {doc.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusColor(doc.status)}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusColor(doc.status)}`}>
                         {doc.status}
                       </span>
                     </td>
@@ -409,7 +423,7 @@ export default function Dashboard({ documents, setViewDocument, setActiveTab }) 
                             setActiveTab('portal');
                           }}
                           title="Simulate Client View"
-                          className="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-pink/20 text-slate-400 hover:text-brand-pink transition-all border border-slate-700/60 text-[10px] font-bold flex items-center gap-1"
+                          className="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-pink/20 text-slate-400 hover:text-brand-pink transition-all border border-slate-700/60 text-[11px] font-bold flex items-center gap-1"
                         >
                           <span>Portal</span>
                           <ArrowRight className="w-3 h-3" />

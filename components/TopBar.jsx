@@ -59,7 +59,7 @@ function StatusDot({ status }) {
   );
 }
 
-export default function TopBar({ isDark, setIsDark, onLogout }) {
+export default function TopBar({ isDark, setIsDark, onLogout, isSupabaseConnected }) {
   const metrics = useSystemMetrics();
   const now     = useClock();
   const [showStatusPopover, setShowStatusPopover] = useState(false);
@@ -76,10 +76,10 @@ export default function TopBar({ isDark, setIsDark, onLogout }) {
     <div
       className={`fixed top-0 left-0 right-0 z-50 h-7 flex items-center px-4 gap-0 select-none
         ${isDark
-          ? 'bg-[#0a0f1c]/90 border-b border-slate-800/80 text-slate-300'
-          : 'bg-white/90 border-b border-slate-200 text-slate-700'
+          ? 'bg-gradient-to-r from-[#0f1a2e]/95 via-[#0d1425]/95 to-[#0a0f1c]/95 border-b border-brand-blue/20 text-slate-300'
+          : 'bg-gradient-to-r from-white/95 via-slate-50/95 to-white/95 border-b border-brand-blue/10 text-slate-700'
         }
-        backdrop-blur-xl`}
+        backdrop-blur-xl shadow-sm shadow-brand-blue/5`}
       style={{ fontSize: '11px' }}
     >
       {/* LEFT — Logo mark */}
@@ -87,7 +87,7 @@ export default function TopBar({ isDark, setIsDark, onLogout }) {
         <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-br from-brand-blue to-brand-pink flex items-center justify-center">
           <span className="text-[6px] text-white font-black leading-none">PW</span>
         </div>
-        <span className={`font-bold tracking-tight text-[11px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        <span className={`font-bold tracking-tight text-[13px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
           PixelWave Admin
         </span>
       </div>
@@ -140,6 +140,27 @@ export default function TopBar({ isDark, setIsDark, onLogout }) {
             {metrics.ping} ms
           </span>
         </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Database status */}
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${isSupabaseConnected ? 'bg-emerald-400' : 'bg-brand-cyan animate-pulse'}`} />
+          <span className={`font-mono font-semibold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            {isSupabaseConnected ? 'DB: Connected (Supabase)' : 'DB: Offline Demo'}
+          </span>
+        </div>
+
+        {/* Divider */}
+        <span className="text-slate-700 opacity-30">|</span>
+
+        {/* Domain */}
+        <div className="flex items-center gap-1.5">
+          <span className={`font-mono font-medium ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+            smartquote.pixelwave.lk
+          </span>
+        </div>
       </div>
 
       {/* RIGHT — Clock + Theme toggle + Logout */}
@@ -187,8 +208,8 @@ export default function TopBar({ isDark, setIsDark, onLogout }) {
           }`}
         >
           <div className="flex items-center justify-between border-b border-slate-800/30 pb-2">
-            <h4 className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-800'}`}>System Status</h4>
-            <button onClick={() => setShowStatusPopover(false)} className="text-slate-500 hover:text-slate-300 text-xs">✕</button>
+            <h4 className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-800'}`}>System Status</h4>
+            <button onClick={() => setShowStatusPopover(false)} className="text-slate-500 hover:text-slate-300 text-[13px]">✕</button>
           </div>
 
           {[
@@ -205,16 +226,16 @@ export default function TopBar({ isDark, setIsDark, onLogout }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <p className={`text-[10px] font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.label}</p>
+                    <p className={`text-[11px] font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.label}</p>
                     <StatusDot status={item.status} />
                   </div>
-                  <p className="text-[9px] font-mono text-slate-500 truncate">{item.detail}</p>
+                  <p className="text-[10px] font-mono text-slate-500 truncate">{item.detail}</p>
                 </div>
               </div>
             );
           })}
 
-          <div className={`pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'} flex items-center gap-1.5 text-[9px] font-mono ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+          <div className={`pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'} flex items-center gap-1.5 text-[10px] font-mono ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
             <RefreshCw className="w-2.5 h-2.5" />
             <span>Auto-refresh every 3s</span>
           </div>

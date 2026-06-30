@@ -74,7 +74,7 @@ export default function LoginScreen({ onAuthenticated }) {
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-white">PixelWave Admin</h1>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">PixelWave Business OS · Secure Access</p>
+            <p className="text-[13px] text-slate-500 font-mono mt-0.5">PixelWave Business OS · Secure Access</p>
           </div>
         </div>
 
@@ -86,12 +86,12 @@ export default function LoginScreen({ onAuthenticated }) {
                 <ShieldCheck className="w-6 h-6 text-emerald-400" />
               </div>
               <p className="text-sm font-bold text-emerald-400">Access Granted</p>
-              <p className="text-[10px] text-slate-500">Redirecting to Command Center…</p>
+              <p className="text-[11px] text-slate-500">Redirecting to Command Center…</p>
             </div>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">
                   Admin Password
                 </label>
                 <div className="relative">
@@ -118,7 +118,7 @@ export default function LoginScreen({ onAuthenticated }) {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 text-[10px] font-semibold text-red-400 bg-red-950/20 border border-red-900/30 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-red-400 bg-red-950/20 border border-red-900/30 rounded-xl px-3 py-2">
                   <AlertCircle className="w-3 h-3 shrink-0" />
                   <span>{error}</span>
                   {blocked && <span className="ml-auto font-mono text-orange-400">({blockTimer}s)</span>}
@@ -142,7 +142,7 @@ export default function LoginScreen({ onAuthenticated }) {
 
           {/* Security footer */}
           <div className="pt-2 border-t border-slate-800/60 text-center">
-            <p className="text-[9px] text-slate-600 font-mono">🔒 PixelWave Solutions · Internal Admin Access</p>
+            <p className="text-[10px] text-slate-600 font-mono">🔒 PixelWave Solutions · Internal Admin Access</p>
           </div>
         </div>
       </div>
