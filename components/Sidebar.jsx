@@ -1,21 +1,22 @@
 import React from 'react';
 import { 
   LayoutDashboard, FileText, Globe, Cpu, ChevronRight, 
-  Settings, Users, Calendar, DollarSign, Briefcase, Share2 
+  Settings, Users, Calendar, DollarSign, Briefcase, Share2, Truck
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const menuItems = [
-    { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
-    { id: 'editor', label: 'AI Doc Builder', icon: FileText },
-    { id: 'pricing', label: 'AI Pricing Matrix', icon: DollarSign },
-    { id: 'kanban', label: 'Production Kanban', icon: Briefcase },
-    { id: 'clients', label: 'Clients & Subs', icon: Users },
-    { id: 'calendar', label: 'Operations Planner', icon: Calendar },
-    { id: 'marketing', label: 'n8n Campaigns', icon: Share2 },
-    { id: 'portal', label: 'Client Portal', icon: Globe },
-    { id: 'customizer', label: 'Brand Customizer', icon: Settings },
-    { id: 'n8n', label: 'n8n AI Workflows', icon: Cpu },
+    { id: 'dashboard',  label: 'Command Center',   icon: LayoutDashboard },
+    { id: 'editor',     label: 'AI Doc Builder',    icon: FileText },
+    { id: 'pricing',    label: 'Pricing Calculator',icon: DollarSign },
+    { id: 'kanban',     label: 'Production Kanban', icon: Briefcase },
+    { id: 'clients',    label: 'Clients & Subs',    icon: Users },
+    { id: 'calendar',   label: 'Operations Planner',icon: Calendar },
+    { id: 'marketing',  label: 'n8n Campaigns',     icon: Share2 },
+    { id: 'suppliers',  label: 'Supplier Tracker',  icon: Truck },
+    { id: 'portal',     label: 'Client Portal',     icon: Globe },
+    { id: 'customizer', label: 'Brand Customizer',  icon: Settings },
+    { id: 'n8n',        label: 'n8n AI Workflows',  icon: Cpu },
   ];
 
   return (

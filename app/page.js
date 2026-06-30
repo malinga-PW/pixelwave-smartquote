@@ -12,6 +12,7 @@ import PricingMatrix from '../components/PricingMatrix';
 import KanbanBoard from '../components/KanbanBoard';
 import MarketingHub from '../components/MarketingHub';
 import BrandCustomizer from '../components/BrandCustomizer';
+import SupplierTracker from '../components/SupplierTracker';
 import { initialDocuments } from '../data/mockDatabase';
 import { supabase } from '../lib/supabaseClient';
 
@@ -301,6 +302,10 @@ export default function Home() {
             />
           )}
 
+          {activeTab === 'suppliers' && (
+            <SupplierTracker />
+          )}
+
           {activeTab === 'portal' && (
             <ClientPortal 
               activeDocument={viewDocument} 
@@ -317,7 +322,31 @@ export default function Home() {
           )}
 
           {activeTab === 'pricing' && (
-            <PricingMatrix />
+            <PricingMatrix 
+              onSendToDocBuilder={(item) => {
+                // Pre-fill doc editor with the pricing item
+                setViewDocument(prev => {
+                  const base = prev || { 
+                    id: `PW-${Date.now()}`, quote_no: `PW-${Date.now()}`, type: 'Quote',
+                    status: 'Draft', customer_name: '', customer_email: '',
+                    customer_phone: '', customer_address: '', issue_date: new Date().toISOString().split('T')[0],
+                    subtotal: 0, discount_percentage: 0, tax_percentage: 0, grand_total: 0,
+                    notes: '', terms: '', items: []
+                  };
+                  const newItem = {
+                    id: `item-${Date.now()}`,
+                    item_title: item.title,
+                    description: item.unit,
+                    qty: item.qty || 1,
+                    unit_price: item.rate,
+                    line_total: (item.qty || 1) * item.rate
+                  };
+                  return { ...base, items: [...(base.items || []), newItem] };
+                });
+                setActiveTab('editor');
+              }}
+              setActiveTab={setActiveTab}
+            />
           )}
 
           {activeTab === 'kanban' && (

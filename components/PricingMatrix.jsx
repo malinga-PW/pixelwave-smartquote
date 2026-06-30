@@ -1,236 +1,483 @@
-import React, { useState } from 'react';
-import { DollarSign, Cpu, HelpCircle, Save, Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import {
+  Package, Palette, Shirt, Zap, Code2, DollarSign,
+  Save, Sparkles, RefreshCw, Send, ChevronRight,
+  Info, Plus, Minus, Calculator
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function PricingMatrix() {
-  // Base cost state variables
-  const [paperBoardCost, setPaperBoardCost] = useState(150); // LKR per unit
-  const [screenPrepBase, setScreenPrepBase] = useState(1500); // LKR setup
-  const [tshirtBlankCost, setTshirtBlankCost] = useState(600); // LKR per blank
-  const [laserRunRate, setLaserRunRate] = useState(50); // LKR per minute
-  const [devHourlyRate, setDevHourlyRate] = useState(8000); // LKR per hour
+// ─── DATA CONSTANTS ──────────────────────────────────────────────────────────
 
-  // Markup percentage state
-  const [targetMarkup, setTargetMarkup] = useState(30); // 30%
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [aiReport, setAiReport] = useState('');
-  const [notification, setNotification] = useState('');
+const MATERIALS = [
+  { id: 'grey-back',    label: 'Box Board (Grey Back)',  costPerSheet: 85,  gsm: '350–400',  note: 'Standard grey-back packaging board' },
+  { id: 'ivory-back',   label: 'Ivory Back Board',       costPerSheet: 120, gsm: '300–350',  note: 'Premium cream one-side coated' },
+  { id: 'white-back',   label: 'White Back Board',       costPerSheet: 140, gsm: '300–400',  note: 'White both sides, high quality' },
+  { id: 'artboard',     label: 'Artboard',               costPerSheet: 160, gsm: '350–400',  note: 'Premium art board — offset quality' },
+  { id: 'art-paper',    label: 'Art Paper',              costPerSheet: 65,  gsm: '130–200',  note: 'Coated gloss / matte art paper' },
+  { id: 'ice-gold',     label: 'Ice Gold',               costPerSheet: 280, gsm: 'Specialty', note: 'Metallic gold premium specialty' },
+  { id: 'ice-silver',   label: 'Ice Silver',             costPerSheet: 280, gsm: 'Specialty', note: 'Metallic silver premium specialty' },
+  { id: 'special',      label: 'Special Board',          costPerSheet: 350, gsm: 'Custom',    note: 'Custom premium substrates' },
+];
 
-  // AI Margin Optimization simulation
-  const runAiOptimization = () => {
+const SHEET_SIZES = [
+  { id: 's1', label: '30 × 21 inch',  area: 630,   mult: 1.0,  note: 'A3+ standard offset' },
+  { id: 's2', label: '43 × 31 inch',  area: 1333,  mult: 1.85, note: 'SRA3 large format' },
+  { id: 's3', label: '40 × 25 inch',  area: 1000,  mult: 1.45, note: 'Custom large format' },
+  { id: 's4', label: '13 × 19 inch',  area: 247,   mult: 0.55, note: 'A3 borderless digital' },
+  { id: 's5', label: '12 × 18 inch',  area: 216,   mult: 0.50, note: 'Small format digital' },
+];
+
+const FINISHINGS = [
+  { id: 'gloss-lam',   label: 'Gloss Lamination',    cost: 8  },
+  { id: 'matte-lam',   label: 'Matte Lamination',     cost: 10 },
+  { id: 'uv-spot',     label: 'UV Spot Varnish',      cost: 15 },
+  { id: 'die-cut',     label: 'Die Cut',              cost: 12 },
+  { id: 'foil-gold',   label: 'Gold Foil Stamp',      cost: 25 },
+  { id: 'foil-silver', label: 'Silver Foil Stamp',    cost: 25 },
+  { id: 'emboss',      label: 'Embossing',            cost: 18 },
+  { id: 'peel-reveal', label: 'Peel & Reveal',        cost: 22 },
+];
+
+const DESIGN_SERVICES = [
+  { label: 'Logo Design',             unit: 'Package',   rate: 15000 },
+  { label: 'Brand Identity Kit',      unit: 'Project',   rate: 35000 },
+  { label: 'Packaging Artwork',       unit: 'Per SKU',   rate: 8000  },
+  { label: 'Social Media Post',       unit: 'Per post',  rate: 2500  },
+  { label: 'Social Media Bundle',     unit: '10 posts',  rate: 20000 },
+  { label: 'Brochure / Leaflet',      unit: 'Per page',  rate: 4500  },
+  { label: 'Business Card',           unit: 'Per design',rate: 3000  },
+  { label: 'Product Label',           unit: 'Per design',rate: 5000  },
+  { label: 'Banner / Standee',        unit: 'Per design',rate: 4000  },
+];
+
+const SCREEN_SERVICES = [
+  { label: 'Screen Setup (per color)', unit: 'Screen',  rate: 1500 },
+  { label: 'T-Shirt Print (1 color)',  unit: 'Per unit', rate: 150  },
+  { label: 'T-Shirt Print (2 color)',  unit: 'Per unit', rate: 220  },
+  { label: 'T-Shirt Print (4 color)',  unit: 'Per unit', rate: 350  },
+  { label: 'Tote Bag Print',           unit: 'Per unit', rate: 180  },
+  { label: 'Fabric Blank (200 GSM)',   unit: 'Per unit', rate: 600  },
+];
+
+const LASER_SERVICES = [
+  { label: 'Laser Engraving (wood)',    unit: 'Per min',  rate: 50  },
+  { label: 'Laser Engraving (acrylic)', unit: 'Per min',  rate: 65  },
+  { label: 'Laser Engraving (leather)', unit: 'Per min',  rate: 55  },
+  { label: 'Laser Engraving (metal)',   unit: 'Per min',  rate: 80  },
+  { label: 'Laser Cutting (wood)',      unit: 'Per min',  rate: 60  },
+  { label: 'Setup & Artwork Prep',      unit: 'Fixed',    rate: 1500},
+];
+
+const N8N_SERVICES = [
+  { label: 'n8n Workflow Setup',         unit: 'Per flow', rate: 15000 },
+  { label: 'Custom Dev (hourly SLA)',    unit: 'Per hour', rate: 8000  },
+  { label: 'AI Agent Integration',       unit: 'Per node', rate: 12000 },
+  { label: 'Website Development',        unit: 'Project',  rate: 85000 },
+  { label: 'SaaS Monthly Retainer',      unit: 'Per month',rate: 25000 },
+  { label: 'Supabase DB Setup',          unit: 'Project',  rate: 18000 },
+  { label: 'API Integration',            unit: 'Per API',  rate: 10000 },
+  { label: 'Hosting + DNS Setup',        unit: 'Setup',    rate: 5000  },
+];
+
+const CURRENCIES = [
+  { code: 'LKR', symbol: 'Rs.', rate: 1 },
+  { code: 'USD', symbol: '$',   rate: 0.003 },
+  { code: 'AED', symbol: 'د.إ',  rate: 0.011 },
+];
+
+// ─── SERVICE TABS ─────────────────────────────────────────────────────────────
+
+const SERVICE_TABS = [
+  { id: 'board',   label: 'Board Printing',  Icon: Package  },
+  { id: 'design',  label: 'Graphic Design',  Icon: Palette  },
+  { id: 'screen',  label: 'Screen Printing', Icon: Shirt    },
+  { id: 'laser',   label: 'Laser Engraving', Icon: Zap      },
+  { id: 'dev',     label: 'n8n / Web Dev',   Icon: Code2    },
+];
+
+// ─── HELPER ───────────────────────────────────────────────────────────────────
+
+const fmt = (n, currency) => {
+  const converted = n * currency.rate;
+  return `${currency.symbol}${converted.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
+
+// ─── COMPONENTS ───────────────────────────────────────────────────────────────
+
+function ServiceRateTable({ services, markup, currency, onSendToDocBuilder }) {
+  const [qtys, setQtys] = useState(() => Object.fromEntries(services.map((_, i) => [i, 1])));
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-12 text-[9px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1 border-b border-slate-850">
+        <div className="col-span-4">Service</div>
+        <div className="col-span-2 text-center">Unit</div>
+        <div className="col-span-2 text-right">Base Rate</div>
+        <div className="col-span-2 text-center">Qty</div>
+        <div className="col-span-2 text-right">Total</div>
+      </div>
+
+      {services.map((svc, i) => {
+        const qty = qtys[i];
+        const lineTotal = Math.round(svc.rate * (1 + markup / 100) * qty);
+        return (
+          <div key={i} className="grid grid-cols-12 items-center bg-slate-950/30 px-3 py-2.5 rounded-xl border border-slate-850 hover:border-slate-750 transition-colors group">
+            <div className="col-span-4">
+              <p className="text-xs font-semibold text-slate-200 group-hover:text-brand-cyan transition-colors">{svc.label}</p>
+            </div>
+            <div className="col-span-2 text-center">
+              <span className="text-[9px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">{svc.unit}</span>
+            </div>
+            <div className="col-span-2 text-right">
+              <span className="text-[10px] font-mono text-slate-400">{fmt(svc.rate, currency)}</span>
+            </div>
+            <div className="col-span-2 flex justify-center items-center gap-1.5">
+              <button onClick={() => setQtys(q => ({ ...q, [i]: Math.max(1, (q[i] || 1) - 1) }))} className="w-5 h-5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 flex items-center justify-center transition-colors">
+                <Minus className="w-2.5 h-2.5" />
+              </button>
+              <span className="text-xs font-mono text-slate-200 w-6 text-center">{qty}</span>
+              <button onClick={() => setQtys(q => ({ ...q, [i]: (q[i] || 1) + 1 }))} className="w-5 h-5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 flex items-center justify-center transition-colors">
+                <Plus className="w-2.5 h-2.5" />
+              </button>
+            </div>
+            <div className="col-span-2 flex justify-end items-center gap-2">
+              <span className="text-xs font-bold font-mono text-white">{fmt(lineTotal, currency)}</span>
+              <button 
+                onClick={() => onSendToDocBuilder({ title: svc.label, unit: svc.unit, rate: lineTotal, qty })}
+                className="opacity-0 group-hover:opacity-100 p-1 rounded bg-brand-blue/20 border border-brand-blue/30 text-brand-cyan transition-all"
+                title="Send to Doc Builder"
+              >
+                <Send className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── BOARD PRINTING CALCULATOR ────────────────────────────────────────────────
+
+function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
+  const [selectedMaterial, setSelectedMaterial] = useState(MATERIALS[0]);
+  const [selectedSize, setSelectedSize]         = useState(SHEET_SIZES[0]);
+  const [qty, setQty]                           = useState(500);
+  const [colors, setColors]                     = useState(4);
+  const [selectedFinishing, setSelectedFinishing] = useState([]);
+  const [isOptimizing, setIsOptimizing]         = useState(false);
+  const [aiReport, setAiReport]                 = useState('');
+
+  const toggleFinishing = (id) => {
+    setSelectedFinishing(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  };
+
+  // Calculations
+  const materialCostPerSheet = selectedMaterial.costPerSheet * selectedSize.mult;
+  const colorSetupCost       = colors * 1200; // LKR per color plate
+  const finishingCostPerUnit = selectedFinishing.reduce((sum, fId) => {
+    const f = FINISHINGS.find(f => f.id === fId);
+    return sum + (f ? f.cost : 0);
+  }, 0);
+  const printRunCost         = qty * 2.5 * colors;               // ink + press time
+  const materialTotalCost    = Math.ceil(qty / 8) * materialCostPerSheet; // ~8 units per sheet
+  const baseCost             = colorSetupCost + printRunCost + materialTotalCost + (finishingCostPerUnit * qty);
+  const baseCostPerUnit      = baseCost / qty;
+  const retailUnit           = baseCostPerUnit * (1 + markup / 100);
+  const grandTotal           = retailUnit * qty;
+
+  const handleOptimize = () => {
     setIsOptimizing(true);
-    setAiReport('');
-    
     setTimeout(() => {
       setIsOptimizing(false);
-      setTargetMarkup(45); // AI suggests raising margins to 45% based on demand
-      setAiReport('💡 [Gemini AI Pricing Expert] Recommendation: Material cost index in Colombo rose by 8.5%. However, current conversion analytics show strong pricing elasticity for Packaging Design and Automation workflows. Suggest raising base markups to 45% to maximize yield while maintaining conversion.');
-      
-      confetti({
-        particleCount: 50,
-        spread: 30,
-        colors: ['#009eff', '#fc0fc0']
-      });
-    }, 2000);
+      setAiReport(`💡 [Gemini Pricing] For ${selectedMaterial.label} with ${colors}-color offset printing on ${qty} units: Market benchmark in Colombo is ${fmt(retailUnit * 1.15, currency)}/unit. Your current rate is competitive. Consider adding foil stamp upsell (+${fmt(finishingCostPerUnit + 25, currency)}/unit) to premium customers.`);
+    }, 1800);
   };
 
-  const handleSaveMatrix = () => {
-    setNotification('⚡ Pricing Matrix rules successfully updated in staging.');
-    setTimeout(() => setNotification(''), 4000);
-    
-    confetti({
-      particleCount: 40,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 }
-    });
-  };
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Material Picker */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paper / Board Material</label>
+          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            {MATERIALS.map(m => (
+              <button
+                key={m.id}
+                onClick={() => setSelectedMaterial(m)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition-all ${
+                  selectedMaterial.id === m.id
+                    ? 'bg-brand-blue/10 border-brand-blue text-white'
+                    : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                }`}
+              >
+                <div>
+                  <p className="text-xs font-bold">{m.label}</p>
+                  <p className="text-[9px] text-slate-500 mt-0.5">{m.gsm} GSM — {m.note}</p>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-brand-cyan whitespace-nowrap ml-2">
+                  {fmt(m.costPerSheet, currency)}/sheet
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-  // Pricing calculations
-  const calcPrice = (base, qtyFactor = 1) => {
-    const markupFactor = 1 + (targetMarkup / 100);
-    return Math.round(base * markupFactor * qtyFactor);
+        {/* Right controls */}
+        <div className="space-y-4">
+          {/* Sheet Size */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Full Sheet Size</label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {SHEET_SIZES.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSize(s)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
+                    selectedSize.id === s.id
+                      ? 'bg-brand-pink/10 border-brand-pink text-white'
+                      : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold font-mono">{s.label}</span>
+                    <span className="text-[9px] text-slate-500">{s.note}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">×{s.mult.toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Qty + Colors */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quantity (units)</label>
+              <input
+                type="number"
+                min={50}
+                step={50}
+                value={qty}
+                onChange={e => setQty(parseInt(e.target.value) || 50)}
+                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Print Colors</label>
+              <select
+                value={colors}
+                onChange={e => setColors(parseInt(e.target.value))}
+                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue"
+              >
+                <option value={1}>1 Color</option>
+                <option value={2}>2 Colors</option>
+                <option value={3}>3 Colors</option>
+                <option value={4}>4 Color CMYK</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Finishing Options */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Finishing Options</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {FINISHINGS.map(f => {
+                const isSelected = selectedFinishing.includes(f.id);
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => toggleFinishing(f.id)}
+                    className={`px-2.5 py-1.5 rounded-lg border text-left text-[9px] font-semibold transition-all ${
+                      isSelected
+                        ? 'bg-brand-cyan/10 border-brand-cyan text-brand-cyan'
+                        : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span>{f.label}</span>
+                    <span className="block font-mono text-slate-500">+{fmt(f.cost, currency)}/unit</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Card */}
+      <div className="glass-panel rounded-2xl p-5 border border-brand-blue/20 bg-slate-950/30 space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xs font-bold text-brand-cyan uppercase tracking-wider flex items-center gap-1.5">
+            <Calculator className="w-3.5 h-3.5" />
+            <span>Live Quote Calculation</span>
+          </h3>
+          <span className="text-[9px] text-slate-500 font-mono">{selectedMaterial.label} · {selectedSize.label} · Qty {qty}</span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Material Cost',    val: fmt(materialTotalCost, currency),   sub: 'Total sheets' },
+            { label: 'Setup + Print Run',val: fmt(colorSetupCost + printRunCost, currency), sub: `${colors} color plates` },
+            { label: 'Finishing Cost',   val: fmt(finishingCostPerUnit * qty, currency), sub: `${selectedFinishing.length} finishing(s)` },
+            { label: 'Base Cost/Unit',   val: fmt(baseCostPerUnit, currency),      sub: 'Before markup' },
+          ].map((item, i) => (
+            <div key={i} className="bg-slate-950/40 rounded-xl p-3 border border-slate-850">
+              <p className="text-[9px] text-slate-500 font-medium">{item.label}</p>
+              <p className="text-sm font-bold text-white font-mono mt-1">{item.val}</p>
+              <p className="text-[9px] text-slate-600 mt-0.5">{item.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-850 pt-4">
+          <div>
+            <p className="text-[10px] text-slate-400 font-medium">Retail Unit Price ({markup}% markup)</p>
+            <p className="text-2xl font-bold text-white font-mono">{fmt(retailUnit, currency)}</p>
+            <p className="text-[10px] text-brand-cyan mt-0.5">Grand Total ({qty} units): <span className="font-bold">{fmt(grandTotal, currency)}</span></p>
+          </div>
+          <button
+            onClick={() => {
+              onSendToDocBuilder({ title: `${selectedMaterial.label} ${colors}-Color Print (${selectedSize.label})`, unit: 'Units', rate: Math.round(retailUnit), qty });
+              confetti({ particleCount: 40, spread: 30 });
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-brand-blue/10 transition-all hover:-translate-y-0.5"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Send to Doc Builder</span>
+          </button>
+        </div>
+
+        {/* AI Optimizer */}
+        <div className="border-t border-slate-850 pt-3 space-y-2">
+          <button
+            onClick={handleOptimize}
+            disabled={isOptimizing}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-pink/30 hover:border-brand-pink text-brand-pink text-[10px] font-semibold transition-all"
+          >
+            {isOptimizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            <span>{isOptimizing ? 'Analyzing market data...' : 'Gemini AI Pricing Insight'}</span>
+          </button>
+          {aiReport && (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-[10px] text-slate-300 leading-relaxed">
+              {aiReport}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+
+export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
+  const [activeService, setActiveService]   = useState('board');
+  const [markup, setMarkup]                 = useState(35);
+  const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
+  const [notification, setNotification]     = useState('');
+
+  const handleSendToDocBuilder = useCallback((item) => {
+    if (onSendToDocBuilder) onSendToDocBuilder(item);
+    setNotification(`✅ "${item.title}" sent to Doc Builder!`);
+    setTimeout(() => setNotification(''), 3500);
+    if (setActiveTab) setTimeout(() => setActiveTab('editor'), 500);
+  }, [onSendToDocBuilder, setActiveTab]);
+
+  const currentServices = {
+    design: DESIGN_SERVICES,
+    screen: SCREEN_SERVICES,
+    laser:  LASER_SERVICES,
+    dev:    N8N_SERVICES,
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            AI Pricing Matrix
+            PixelWave Pricing Calculator
+            <Sparkles className="w-5 h-5 text-brand-pink animate-pulse" />
           </h2>
-          <p className="text-slate-400 text-sm">
-            Control base operational variables and let the Gemini pricing engine optimize target profit margins.
+          <p className="text-slate-400 text-sm mt-0.5">
+            Select a service → configure materials & quantity → get live pricing → send to Doc Builder.
           </p>
         </div>
-        <button
-          onClick={handleSaveMatrix}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-blue to-brand-pink hover:from-brand-blue/95 hover:to-brand-pink/95 text-white text-sm font-semibold shadow-lg shadow-brand-blue/10 flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5"
-        >
-          <Save className="w-4 h-4" />
-          <span>Save Pricing Rules</span>
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Currency Switcher */}
+          <div className="flex bg-slate-950/50 p-1 border border-slate-850 rounded-xl no-print">
+            {CURRENCIES.map(c => (
+              <button
+                key={c.code}
+                onClick={() => setSelectedCurrency(c)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  selectedCurrency.code === c.code
+                    ? 'bg-slate-800 text-white border border-slate-700'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {c.code}
+              </button>
+            ))}
+          </div>
+
+          {/* Markup Slider */}
+          <div className="flex items-center gap-2 bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-1.5 no-print">
+            <span className="text-[10px] text-slate-400 font-semibold">Markup:</span>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              value={markup}
+              onChange={e => setMarkup(parseInt(e.target.value))}
+              className="w-20 accent-brand-blue"
+            />
+            <span className="text-xs font-bold text-brand-cyan font-mono w-8">{markup}%</span>
+          </div>
+        </div>
       </div>
 
       {notification && (
-        <div className="bg-emerald-950/15 border border-emerald-900/30 p-4 rounded-xl text-xs text-emerald-400 font-mono">
+        <div className="bg-emerald-950/20 border border-emerald-900/30 px-4 py-3 rounded-xl text-xs text-emerald-400 font-semibold">
           {notification}
         </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Left Column: Base Cost Form (Span 7) */}
-        <div className="md:col-span-7 glass-panel rounded-2xl p-6 border border-slate-800/80 space-y-6">
-          <h3 className="text-sm font-bold text-white tracking-wider uppercase border-b border-slate-850 pb-3 flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-brand-cyan" />
-            <span>Base Production Cost Factors</span>
-          </h3>
+      {/* Service Tab Bar */}
+      <div className="flex gap-2 flex-wrap no-print">
+        {SERVICE_TABS.map(tab => {
+          const Icon = tab.Icon;
+          const isActive = activeService === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveService(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
+                isActive
+                  ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/10 border-brand-blue text-white shadow-sm'
+                  : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-brand-cyan' : ''}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Paper Board */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paper Board Cost (LKR/unit)</label>
-              <input
-                type="number"
-                value={paperBoardCost}
-                onChange={(e) => setPaperBoardCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
-              />
-              <span className="text-[9px] text-slate-500">Includes lamination and material board costs.</span>
-            </div>
-
-            {/* Screen prep */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Screen Prep Setup (LKR)</label>
-              <input
-                type="number"
-                value={screenPrepBase}
-                onChange={(e) => setScreenPrepBase(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
-              />
-              <span className="text-[9px] text-slate-500">Plastisol screens & frame alignment labor fee.</span>
-            </div>
-
-            {/* Cotton shirts */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">T-Shirt Blank Sourcing (LKR)</label>
-              <input
-                type="number"
-                value={tshirtBlankCost}
-                onChange={(e) => setTshirtBlankCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
-              />
-              <span className="text-[9px] text-slate-500">200 GSM organic cotton knit blanks.</span>
-            </div>
-
-            {/* Laser rate */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Laser Engraving Run (LKR/min)</label>
-              <input
-                type="number"
-                value={laserRunRate}
-                onChange={(e) => setLaserRunRate(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
-              />
-              <span className="text-[9px] text-slate-500">Fiber laser lens runtime depreciation.</span>
-            </div>
-
-            {/* Dev rate */}
-            <div className="space-y-1 sm:col-span-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">n8n Custom Dev Hourly SLA (LKR)</label>
-              <input
-                type="number"
-                value={devHourlyRate}
-                onChange={(e) => setDevHourlyRate(parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-brand-blue font-mono"
-              />
-              <span className="text-[9px] text-slate-500">Custom workflow engineering and testing services rate.</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: AI Optimizer & Matrix Outputs (Span 5) */}
-        <div className="md:col-span-5 space-y-6">
-          {/* AI Optimizer Panel */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 bg-slate-950/15 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-white tracking-wider uppercase flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-brand-pink" />
-                <span>Gemini Pricing Optimizer</span>
-              </h3>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-brand-pink/10 border border-brand-pink/20 text-brand-pink font-semibold">Active</span>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-4 justify-between bg-slate-950/30 p-3 rounded-xl border border-slate-850">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-medium block">Target Profit Markup</span>
-                  <span className="text-xl font-bold text-white font-mono">{targetMarkup}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="100"
-                  value={targetMarkup}
-                  onChange={(e) => setTargetMarkup(parseInt(e.target.value))}
-                  className="w-32 accent-brand-blue"
-                />
-              </div>
-
-              {isOptimizing ? (
-                <div className="bg-slate-950/50 border border-slate-850 p-4 rounded-xl flex items-center gap-3">
-                  <RefreshCw className="w-4 h-4 text-brand-cyan animate-spin" />
-                  <span className="text-[10px] font-mono text-slate-400">Gemini analyzing pricing matrices...</span>
-                </div>
-              ) : (
-                <button
-                  onClick={runAiOptimization}
-                  className="w-full py-2.5 rounded-xl bg-slate-950/60 border border-brand-pink hover:bg-brand-pink/10 text-brand-pink text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-300"
-                >
-                  <Cpu className="w-3.5 h-3.5" />
-                  <span>Analyze & Optimize Margins</span>
-                </button>
-              )}
-
-              {aiReport && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-[10px] text-slate-300 leading-relaxed font-medium">
-                  {aiReport}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Calculator Output Preview */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 bg-slate-950/15 space-y-4">
-            <h3 className="text-xs font-bold text-white tracking-wider uppercase border-b border-slate-850 pb-3">
-              Recommended Unit Prices (LKR)
-            </h3>
-
-            <div className="space-y-2.5 font-mono text-xs">
-              <div className="flex justify-between items-center bg-slate-950/20 px-3.5 py-2 rounded-xl border border-slate-850/60">
-                <span className="text-slate-400 text-[10px] font-sans">Cardboard Packaging Box (500 units)</span>
-                <span className="text-slate-100 font-bold">{calcPrice(paperBoardCost).toLocaleString()} LKR</span>
-              </div>
-
-              <div className="flex justify-between items-center bg-slate-950/20 px-3.5 py-2 rounded-xl border border-slate-850/60">
-                <span className="text-slate-400 text-[10px] font-sans">Branded T-Shirt (200 units print run)</span>
-                <span className="text-slate-100 font-bold">{(calcPrice(tshirtBlankCost) + Math.round(screenPrepBase / 200)).toLocaleString()} LKR</span>
-              </div>
-
-              <div className="flex justify-between items-center bg-slate-950/20 px-3.5 py-2 rounded-xl border border-slate-850/60">
-                <span className="text-slate-400 text-[10px] font-sans">Laser Engraved Journal (10 min run)</span>
-                <span className="text-slate-100 font-bold">{calcPrice(laserRunRate, 10).toLocaleString()} LKR</span>
-              </div>
-
-              <div className="flex justify-between items-center bg-slate-950/20 px-3.5 py-2 rounded-xl border border-slate-850/60">
-                <span className="text-slate-400 text-[10px] font-sans">Automation Integration (40 hours SLA)</span>
-                <span className="text-slate-100 font-bold">{calcPrice(devHourlyRate, 40).toLocaleString()} LKR</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Panel Content */}
+      <div className="glass-panel rounded-2xl p-6 border border-slate-800/80">
+        {activeService === 'board' && (
+          <BoardPrintingCalc markup={markup} currency={selectedCurrency} onSendToDocBuilder={handleSendToDocBuilder} />
+        )}
+        {activeService !== 'board' && (
+          <ServiceRateTable
+            services={currentServices[activeService]}
+            markup={markup}
+            currency={selectedCurrency}
+            onSendToDocBuilder={handleSendToDocBuilder}
+          />
+        )}
       </div>
     </div>
   );
