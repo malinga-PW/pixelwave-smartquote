@@ -74,7 +74,7 @@ export default function LoginScreen({ onAuthenticated }) {
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-white">PixelWave Admin</h1>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">SmartQuote SaaS Platform · Secure Access</p>
+            <p className="text-xs text-slate-500 font-mono mt-0.5">PixelWave Business OS · Secure Access</p>
           </div>
         </div>
 

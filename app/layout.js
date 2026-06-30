@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "PixelWave SmartQuote - SaaS Client & Doc Lifecycle Hub",
+  title: "PixelWave Business OS - Full-Suite Agency Management Hub",
   description: "AI-powered transaction lifecycle platform for digital printing, packaging design, and business automation workflows.",
 };
 

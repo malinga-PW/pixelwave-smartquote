@@ -48,7 +48,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               Pixel<span className="text-brand-pink">Wave</span>
             </h1>
             <span className="text-[10px] tracking-wider uppercase font-semibold text-brand-cyan/80">
-              SmartQuote SaaS
+              Business OS
             </span>
           </div>
         </div>
