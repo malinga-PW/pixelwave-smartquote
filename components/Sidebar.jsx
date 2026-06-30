@@ -4,7 +4,7 @@ import {
   Settings, Users, Calendar, DollarSign, Briefcase, Share2, Truck, TrendingUp
 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab }) {
+export default function Sidebar({ activeTab, setActiveTab, isDark }) {
   const menuItems = [
     { id: 'dashboard',  label: 'Command Center',   icon: LayoutDashboard },
     { id: 'editor',     label: 'AI Doc Builder',    icon: FileText },
