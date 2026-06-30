@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, Plus, Trash2, Save, FileSpreadsheet, 
-  RefreshCcw, ArrowRight, Printer, AlertTriangle 
+  RefreshCcw, ArrowRight, Printer, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
 import { mockAIIntakePresets } from '../data/mockDatabase';
 
