@@ -14,6 +14,8 @@ import MarketingHub from '../components/MarketingHub';
 import BrandCustomizer from '../components/BrandCustomizer';
 import SupplierTracker from '../components/SupplierTracker';
 import PnLTracker from '../components/PnLTracker';
+import LoginScreen from '../components/LoginScreen';
+import TopBar from '../components/TopBar';
 import { initialDocuments } from '../data/mockDatabase';
 import { supabase } from '../lib/supabaseClient';
 
@@ -23,6 +25,21 @@ export default function Home() {
   const [viewDocument, setViewDocument] = useState(null);
   const [notification, setNotification] = useState(null);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isDark, setIsDark] = useState(true);
+
+  // Check session on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = sessionStorage.getItem('pw_admin_auth');
+      if (auth === 'true') setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') sessionStorage.removeItem('pw_admin_auth');
+    setIsAuthenticated(false);
+  };
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -251,10 +268,23 @@ export default function Home() {
     }
   };
 
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
+
+  const themeClass = isDark
+    ? 'bg-[#090d16] text-slate-100'
+    : 'bg-slate-50 text-slate-900';
+
   return (
-    <div className="flex min-h-screen bg-[#090d16] text-slate-100 selection:bg-brand-blue selection:text-white">
-      {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className={`flex min-h-screen ${themeClass} selection:bg-brand-blue selection:text-white`}>
+      {/* macOS-style Top Status Bar */}
+      <TopBar isDark={isDark} setIsDark={setIsDark} onLogout={handleLogout} />
+
+      {/* Sidebar Navigation — shift down 28px for topbar */}
+      <div className="pt-7 flex flex-1">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isDark={isDark} />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-h-screen overflow-y-auto">
@@ -371,6 +401,7 @@ export default function Home() {
           )}
         </div>
       </main>
+      </div>
     </div>
   );
 }
