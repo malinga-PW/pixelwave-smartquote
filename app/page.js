@@ -330,26 +330,28 @@ export default function Home() {
               onSaveDocument={handleSaveDocument}
               onConvertDocument={handleConvertDocument}
               documents={documents}
+              isDark={isDark}
             />
           )}
 
           {activeTab === 'suppliers' && (
-            <SupplierTracker />
+            <SupplierTracker isDark={isDark} />
           )}
 
           {activeTab === 'pnl' && (
-            <PnLTracker />
+            <PnLTracker isDark={isDark} />
           )}
 
           {activeTab === 'portal' && (
             <ClientPortal 
               activeDocument={viewDocument} 
               onUpdateStatus={handleUpdateStatus} 
+              isDark={isDark}
             />
           )}
 
           {activeTab === 'clients' && (
-            <ClientsSubscriptions />
+            <ClientsSubscriptions isDark={isDark} />
           )}
 
           {activeTab === 'calendar' && (
@@ -358,6 +360,7 @@ export default function Home() {
 
           {activeTab === 'pricing' && (
             <PricingMatrix 
+              isDark={isDark}
               onSendToDocBuilder={(item) => {
                 // Pre-fill doc editor with the pricing item
                 setViewDocument(prev => {

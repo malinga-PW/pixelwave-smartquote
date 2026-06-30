@@ -1,53 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, Globe, Calendar, DollarSign, 
   UserPlus, Bell, Pause, Play, Trash2, ArrowUpRight, ShieldCheck 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function ClientsSubscriptions() {
-  const [clients, setClients] = useState([
-    {
-      id: 'sub-1',
-      name: 'Topleaf Plantations Pvt Ltd',
-      company: 'Topleaf Ceylon',
-      plan: 'Hosting & SmartQuote Bundle',
-      fee: 15000,
-      subdomain: 'topleaf.pixelwave.lk',
-      renewal: '2026-07-28',
-      status: 'Active'
-    },
-    {
-      id: 'sub-2',
-      name: 'Green Field Tea Exporters',
-      company: 'Green Field Tea',
-      plan: 'Premium E-Commerce SLA',
-      fee: 30000,
-      subdomain: 'greenfield.pixelwave.lk',
-      renewal: '2026-07-15',
-      status: 'Active'
-    },
-    {
-      id: 'sub-3',
-      name: 'TechStart Hub (Asia)',
-      company: 'TechStart Hub',
-      plan: 'Automation & SaaS Care',
-      fee: 50000,
-      subdomain: 'techstart.pixelwave.lk',
-      renewal: '2026-07-10',
-      status: 'Pending'
-    },
-    {
-      id: 'sub-4',
-      name: 'Lanka Crafted Gifts',
-      company: 'Lanka Crafted',
-      plan: 'Basic Web Hosting & Support',
-      fee: 5000,
-      subdomain: 'lankacrafted.pixelwave.lk',
-      renewal: '2026-07-02',
-      status: 'Active'
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSubscriptions() {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*, customers(name)')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setClients(data.map(sub => ({
+          id: sub.id,
+          name: sub.customers?.name || sub.company,
+          company: sub.company,
+          plan: sub.plan_name,
+          fee: Number(sub.monthly_fee),
+          subdomain: sub.subdomain,
+          renewal: sub.renewal_date,
+          status: sub.status
+        })));
+      }
+      setLoading(false);
     }
-  ]);
+    fetchSubscriptions();
+  }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
@@ -65,52 +50,100 @@ export default function ClientsSubscriptions() {
     .filter(c => c.status === 'Active')
     .reduce((sum, c) => sum + c.fee, 0);
 
-  const handleAddClient = (e) => {
+  const handleAddClient = async (e) => {
     e.preventDefault();
     if (!newName || !newSubdomain) {
       alert('Please fill out Name and Subdomain');
       return;
     }
 
-    const newClient = {
-      id: `sub-${Date.now()}`,
-      name: newName,
+    // 1. Get or create customer
+    let customerId = null;
+    const { data: existingCust } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('name', newName)
+      .limit(1);
+
+    if (existingCust && existingCust.length > 0) {
+      customerId = existingCust[0].id;
+    } else {
+      const { data: newCust } = await supabase
+        .from('customers')
+        .insert({
+          name: newName,
+          company: newCompany || newName
+        })
+        .select();
+      if (newCust && newCust.length > 0) {
+        customerId = newCust[0].id;
+      }
+    }
+
+    const subdomainFormatted = newSubdomain.toLowerCase().endsWith('.pixelwave.lk') 
+      ? newSubdomain.toLowerCase() 
+      : `${newSubdomain.toLowerCase()}.pixelwave.lk`;
+
+    const nextRenewalDate = newRenewal || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const newSub = {
+      customer_id: customerId,
+      plan_name: newPlan,
+      monthly_fee: parseFloat(newFee) || 0,
+      subdomain: subdomainFormatted,
+      renewal_date: nextRenewalDate,
       company: newCompany || newName,
-      plan: newPlan,
-      fee: parseFloat(newFee) || 0,
-      subdomain: newSubdomain.toLowerCase().endsWith('.pixelwave.lk') ? newSubdomain.toLowerCase() : `${newSubdomain.toLowerCase()}.pixelwave.lk`,
-      renewal: newRenewal || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'Active'
     };
 
-    setClients([...clients, newClient]);
-    setShowAddModal(false);
-    
-    // Clear form
-    setNewName('');
-    setNewCompany('');
-    setNewSubdomain('');
-    setNewRenewal('');
+    const { data, error } = await supabase.from('subscriptions').insert(newSub).select('*, customers(name)');
+    if (data && data.length > 0) {
+      const added = {
+        id: data[0].id,
+        name: data[0].customers?.name || data[0].company,
+        company: data[0].company,
+        plan: data[0].plan_name,
+        fee: Number(data[0].monthly_fee),
+        subdomain: data[0].subdomain,
+        renewal: data[0].renewal_date,
+        status: data[0].status
+      };
 
-    // Confetti
-    confetti({
-      particleCount: 80,
-      spread: 50,
-      colors: ['#009eff', '#0b54fe']
-    });
+      setClients(prev => [added, ...prev]);
+      setShowAddModal(false);
+      
+      // Clear form
+      setNewName('');
+      setNewCompany('');
+      setNewSubdomain('');
+      setNewRenewal('');
 
-    setNotification(`Client ${newClient.name} added to subscriptions.`);
-    setTimeout(() => setNotification(''), 4000);
+      // Confetti
+      confetti({
+        particleCount: 80,
+        spread: 50,
+        colors: ['#009eff', '#0b54fe']
+      });
+
+      setNotification(`Client ${added.name} added to subscriptions.`);
+      setTimeout(() => setNotification(''), 4000);
+    }
   };
 
-  const handleStatusToggle = (id) => {
-    setClients(clients.map(c => {
-      if (c.id === id) {
-        const nextStatus = c.status === 'Active' ? 'Suspended' : 'Active';
-        return { ...c, status: nextStatus };
-      }
-      return c;
-    }));
+  const handleStatusToggle = async (id) => {
+    const client = clients.find(c => c.id === id);
+    if (!client) return;
+    const nextStatus = client.status === 'Active' ? 'Suspended' : 'Active';
+    
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .update({ status: nextStatus })
+      .eq('id', id)
+      .select();
+      
+    if (data) {
+      setClients(clients.map(c => c.id === id ? { ...c, status: nextStatus } : c));
+    }
   };
 
   const handleSendReminder = (clientName) => {

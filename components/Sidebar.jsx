@@ -21,7 +21,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900/60 backdrop-blur-md border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 overflow-y-auto no-print">
+    <aside className={`w-64 backdrop-blur-md border-r flex flex-col justify-between h-screen sticky top-0 overflow-y-auto no-print ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white/60 border-slate-200'}`}>
       {/* Top Section */}
       <div className="p-6">
         {/* Brand Header */}
@@ -44,7 +44,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <div className="absolute -inset-0.5 bg-gradient-to-tr from-brand-blue to-brand-pink rounded-lg blur opacity-30 -z-10"></div>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1">
+            <h1 className={`text-lg font-bold tracking-tight flex items-center gap-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               Pixel<span className="text-brand-pink">Wave</span>
             </h1>
             <span className="text-[10px] tracking-wider uppercase font-semibold text-brand-cyan/80">
@@ -57,28 +57,27 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm group ${
-                  isActive
-                    ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/5 text-white border-l-4 border-brand-blue shadow-inner shadow-brand-blue/5'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border-l-4 border-transparent'
-                }`}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300
+                  ${activeTab === item.id 
+                    ? isDark 
+                      ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/5 text-white shadow-lg shadow-brand-blue/5'
+                      : 'bg-gradient-to-r from-brand-blue/10 to-brand-pink/5 text-brand-blue shadow-sm border border-brand-blue/10'
+                    : isDark
+                      ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                      : 'text-slate-600 hover:text-brand-blue hover:bg-brand-blue/5'
+                  }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon
-                    className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${
-                      isActive ? 'text-brand-cyan' : 'text-slate-400 group-hover:text-brand-blue'
-                    }`}
-                  />
+                  <Icon className={`w-4 h-4 transition-transform duration-300 group-hover:scale-110 ${activeTab === item.id ? (isDark ? 'text-brand-cyan' : 'text-brand-blue') : ''}`} />
                   <span>{item.label}</span>
                 </div>
                 <ChevronRight
                   className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                    isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'
+                    activeTab === item.id ? 'opacity-100 translate-x-0 text-brand-blue' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'
                   }`}
                 />
               </button>
@@ -88,13 +87,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       </div>
 
       {/* Bottom Section */}
-      <div className="p-6 border-t border-slate-800/60 bg-slate-950/20">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/30 transition-all cursor-pointer">
+      <div className={`p-6 border-t ${isDark ? 'border-slate-800/60 bg-slate-950/20' : 'border-slate-200 bg-slate-50/50'}`}>
+        <div className={`flex items-center gap-3 p-2 rounded-lg transition-all cursor-pointer ${isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-200/50'}`}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-blue/40 to-brand-pink/40 flex items-center justify-center text-xs font-bold text-white shadow-inner">
             PW
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-slate-200 truncate">PixelWave Solutions</p>
+            <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>PixelWave Solutions</p>
             <p className="text-[10px] text-slate-500 truncate">saas-admin@pixelwave.lk</p>
           </div>
         </div>

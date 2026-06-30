@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Package, Palette, Shirt, Zap, Code2, DollarSign,
   Save, Sparkles, RefreshCw, Send, ChevronRight,
   Info, Plus, Minus, Calculator
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabaseClient';
 
 // ─── DATA CONSTANTS ──────────────────────────────────────────────────────────
 
@@ -159,9 +160,21 @@ function ServiceRateTable({ services, markup, currency, onSendToDocBuilder }) {
 
 // ─── BOARD PRINTING CALCULATOR ────────────────────────────────────────────────
 
-function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
-  const [selectedMaterial, setSelectedMaterial] = useState(MATERIALS[0]);
-  const [selectedSize, setSelectedSize]         = useState(SHEET_SIZES[0]);
+function BoardPrintingCalc({ materials, sheetSizes, finishings, markup, currency, onSendToDocBuilder, isDark = true }) {
+  const [selectedMaterial, setSelectedMaterial] = useState(materials[0]);
+  const [selectedSize, setSelectedSize]         = useState(sheetSizes[0]);
+
+  useEffect(() => {
+    if (materials && materials.length > 0) {
+      setSelectedMaterial(prev => prev && materials.some(m => m.id === prev.id) ? materials.find(m => m.id === prev.id) : materials[0]);
+    }
+  }, [materials]);
+
+  useEffect(() => {
+    if (sheetSizes && sheetSizes.length > 0) {
+      setSelectedSize(prev => prev && sheetSizes.some(s => s.id === prev.id) ? sheetSizes.find(s => s.id === prev.id) : sheetSizes[0]);
+    }
+  }, [sheetSizes]);
   const [qty, setQty]                           = useState(500);
   const [colors, setColors]                     = useState(4);
   const [selectedFinishing, setSelectedFinishing] = useState([]);
@@ -173,10 +186,10 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
   };
 
   // Calculations
-  const materialCostPerSheet = selectedMaterial.costPerSheet * selectedSize.mult;
+  const materialCostPerSheet = (selectedMaterial?.costPerSheet || 0) * (selectedSize?.mult || 1);
   const colorSetupCost       = colors * 1200; // LKR per color plate
   const finishingCostPerUnit = selectedFinishing.reduce((sum, fId) => {
-    const f = FINISHINGS.find(f => f.id === fId);
+    const f = finishings.find(f => f.id === fId);
     return sum + (f ? f.cost : 0);
   }, 0);
   const printRunCost         = qty * 2.5 * colors;               // ink + press time
@@ -190,7 +203,7 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
     setIsOptimizing(true);
     setTimeout(() => {
       setIsOptimizing(false);
-      setAiReport(`💡 [Gemini Pricing] For ${selectedMaterial.label} with ${colors}-color offset printing on ${qty} units: Market benchmark in Colombo is ${fmt(retailUnit * 1.15, currency)}/unit. Your current rate is competitive. Consider adding foil stamp upsell (+${fmt(finishingCostPerUnit + 25, currency)}/unit) to premium customers.`);
+      setAiReport(`💡 [Gemini Pricing] For ${selectedMaterial?.label || 'selected board'} with ${colors}-color offset printing on ${qty} units: Market benchmark in Colombo is ${fmt(retailUnit * 1.15, currency)}/unit. Your current rate is competitive. Consider adding foil stamp upsell (+${fmt(finishingCostPerUnit + 25, currency)}/unit) to premium customers.`);
     }, 1800);
   };
 
@@ -201,23 +214,20 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Paper / Board Material</label>
           <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-            {MATERIALS.map(m => (
+            {materials.map(m => (
               <button
                 key={m.id}
                 onClick={() => setSelectedMaterial(m)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition-all ${
-                  selectedMaterial.id === m.id
-                    ? 'bg-brand-blue/10 border-brand-blue text-white'
-                    : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                className={`p-3 rounded-xl border transition-all text-left group
+                  ${selectedMaterial?.id === m.id
+                  ? `bg-brand-blue/10 border-brand-blue ${isDark ? 'text-white' : 'text-brand-blue'}`
+                  : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`
                 }`}
               >
                 <div>
                   <p className="text-xs font-bold">{m.label}</p>
                   <p className="text-[9px] text-slate-500 mt-0.5">{m.gsm} GSM — {m.note}</p>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-brand-cyan whitespace-nowrap ml-2">
-                  {fmt(m.costPerSheet, currency)}/sheet
-                </span>
               </button>
             ))}
           </div>
@@ -228,22 +238,19 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
           {/* Sheet Size */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Full Sheet Size</label>
-            <div className="grid grid-cols-1 gap-1.5">
-              {SHEET_SIZES.map(s => (
+            <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+              {sheetSizes.map(s => (
                 <button
                   key={s.id}
                   onClick={() => setSelectedSize(s)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all ${
-                    selectedSize.id === s.id
-                      ? 'bg-brand-pink/10 border-brand-pink text-white'
-                      : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'
+                  className={`p-2.5 rounded-xl border transition-all text-left font-mono
+                    ${selectedSize?.id === s.id
+                    ? `bg-brand-blue/10 border-brand-blue ${isDark ? 'text-white' : 'text-brand-blue'}`
+                    : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold font-mono">{s.label}</span>
-                    <span className="text-[9px] text-slate-500">{s.note}</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400">×{s.mult.toFixed(2)}</span>
+                  <span className="text-[10px] font-bold block">{s.label}</span>
+                  <span className="text-[8px] text-slate-500 font-sans block mt-0.5">Area multiplier: {s.mult}x</span>
                 </button>
               ))}
             </div>
@@ -280,8 +287,8 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
           {/* Finishing Options */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Finishing Options</label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {FINISHINGS.map(f => {
+            <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
+              {finishings.map(f => {
                 const isSelected = selectedFinishing.includes(f.id);
                 return (
                   <button
@@ -369,11 +376,98 @@ function BoardPrintingCalc({ markup, currency, onSendToDocBuilder }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
-export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
+export default function PricingMatrix({ onSendToDocBuilder, setActiveTab, isDark = true }) {
   const [activeService, setActiveService]   = useState('board');
   const [markup, setMarkup]                 = useState(35);
   const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
   const [notification, setNotification]     = useState('');
+
+  // Live pricing states initialized with mock fallbacks
+  const [materials, setMaterials] = useState(MATERIALS);
+  const [sheetSizes, setSheetSizes] = useState(SHEET_SIZES);
+  const [finishings, setFinishings] = useState(FINISHINGS);
+  const [designServices, setDesignServices] = useState(DESIGN_SERVICES);
+  const [screenServices, setScreenServices] = useState(SCREEN_SERVICES);
+  const [laserServices, setLaserServices] = useState(LASER_SERVICES);
+  const [n8nServices, setN8nServices] = useState(N8N_SERVICES);
+
+  useEffect(() => {
+    async function fetchPricingData() {
+      const [matRes, sizeRes, svcRes] = await Promise.all([
+        supabase.from('pricing_materials').select('*').eq('is_active', true),
+        supabase.from('pricing_sheet_sizes').select('*').eq('is_active', true),
+        supabase.from('pricing_services').select('*').eq('is_active', true)
+      ]);
+
+      if (matRes.data && matRes.data.length > 0) {
+        setMaterials(matRes.data.map(m => ({
+          id: m.id,
+          label: m.name,
+          costPerSheet: Number(m.cost_per_sheet),
+          gsm: m.gsm,
+          note: m.note
+        })));
+      }
+
+      if (sizeRes.data && sizeRes.data.length > 0) {
+        setSheetSizes(sizeRes.data.map(s => ({
+          id: s.id,
+          label: s.label,
+          area: Number(s.area_sqin),
+          mult: Number(s.multiplier),
+          note: s.note
+        })));
+      }
+
+      if (svcRes.data && svcRes.data.length > 0) {
+        const boardSvcs = svcRes.data.filter(s => s.category === 'board');
+        if (boardSvcs.length > 0) {
+          setFinishings(boardSvcs.map(s => ({
+            id: s.id,
+            label: s.label,
+            cost: Number(s.base_rate)
+          })));
+        }
+
+        const designSvcs = svcRes.data.filter(s => s.category === 'design');
+        if (designSvcs.length > 0) {
+          setDesignServices(designSvcs.map(s => ({
+            label: s.label,
+            unit: s.unit,
+            rate: Number(s.base_rate)
+          })));
+        }
+
+        const screenSvcs = svcRes.data.filter(s => s.category === 'screen');
+        if (screenSvcs.length > 0) {
+          setScreenServices(screenSvcs.map(s => ({
+            label: s.label,
+            unit: s.unit,
+            rate: Number(s.base_rate)
+          })));
+        }
+
+        const laserSvcs = svcRes.data.filter(s => s.category === 'laser');
+        if (laserSvcs.length > 0) {
+          setLaserServices(laserSvcs.map(s => ({
+            label: s.label,
+            unit: s.unit,
+            rate: Number(s.base_rate)
+          })));
+        }
+
+        const devSvcs = svcRes.data.filter(s => s.category === 'dev');
+        if (devSvcs.length > 0) {
+          setN8nServices(devSvcs.map(s => ({
+            label: s.label,
+            unit: s.unit,
+            rate: Number(s.base_rate)
+          })));
+        }
+      }
+    }
+    fetchPricingData();
+  }, []);
 
   const handleSendToDocBuilder = useCallback((item) => {
     if (onSendToDocBuilder) onSendToDocBuilder(item);
@@ -383,10 +477,10 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
   }, [onSendToDocBuilder, setActiveTab]);
 
   const currentServices = {
-    design: DESIGN_SERVICES,
-    screen: SCREEN_SERVICES,
-    laser:  LASER_SERVICES,
-    dev:    N8N_SERVICES,
+    design: designServices,
+    screen: screenServices,
+    laser:  laserServices,
+    dev:    n8nServices,
   };
 
   return (
@@ -410,10 +504,10 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
               <button
                 key={c.code}
                 onClick={() => setSelectedCurrency(c)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                  selectedCurrency.code === c.code
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-400 hover:text-slate-200'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all
+                  ${selectedCurrency.code === c.code
+                  ? isDark ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-900 border border-slate-300 shadow-sm'
+                  : isDark ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-900' : 'text-slate-600 hover:text-brand-blue hover:bg-slate-200/50'
                 }`}
               >
                 {c.code}
@@ -453,10 +547,10 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
               key={tab.id}
               onClick={() => setActiveService(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
-                isActive
-                  ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/10 border-brand-blue text-white shadow-sm'
-                  : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-              }`}
+                  isActive
+                  ? `bg-gradient-to-r from-brand-blue/20 to-brand-pink/10 border-brand-blue shadow-sm ${isDark ? 'text-white' : 'text-brand-blue border'}`
+                  : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`
+                }`}
             >
               <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-brand-cyan' : ''}`} />
               <span>{tab.label}</span>
@@ -468,7 +562,15 @@ export default function PricingMatrix({ onSendToDocBuilder, setActiveTab }) {
       {/* Panel Content */}
       <div className="glass-panel rounded-2xl p-6 border border-slate-800/80">
         {activeService === 'board' && (
-          <BoardPrintingCalc markup={markup} currency={selectedCurrency} onSendToDocBuilder={handleSendToDocBuilder} />
+          <BoardPrintingCalc
+            materials={materials}
+            sheetSizes={sheetSizes}
+            finishings={finishings}
+            markup={markup}
+            currency={selectedCurrency}
+            onSendToDocBuilder={handleSendToDocBuilder}
+            isDark={isDark}
+          />
         )}
         {activeService !== 'board' && (
           <ServiceRateTable

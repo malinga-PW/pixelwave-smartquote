@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import {
   TrendingUp, TrendingDown, DollarSign, Globe, Server,
   Wifi, Megaphone, Plus, Trash2, X, BarChart2, Sparkles,
@@ -21,57 +22,40 @@ const CATEGORIES = [
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// ─── SEED DATA ─────────────────────────────────────────────────────────────────
-const SEED_EXPENSES = [
-  // Domain
-  { id: 'e1',  category: 'domain',   description: 'pixelwave.lk (2 yr)',   amount: 7200,  month: 1,  year: 2026, recurring: true,  recurrMonths: 24 },
-  { id: 'e2',  category: 'domain',   description: 'maxwelllanka.lk',        amount: 3500,  month: 3,  year: 2026, recurring: true,  recurrMonths: 12 },
-  // Hostinger
-  { id: 'e3',  category: 'hosting',  description: 'Hostinger Business Plan',amount: 8900,  month: 1,  year: 2026, recurring: true,  recurrMonths: 12 },
-  // VPS
-  { id: 'e4',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 1,  year: 2026, recurring: true,  recurrMonths: 1  },
-  { id: 'e5',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 2,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e6',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 3,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e7',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 4,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e8',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e9',  category: 'vps',      description: 'Supabase self-hosted VPS',amount: 6500, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
-  // Internet
-  { id: 'e10', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 1,  year: 2026, recurring: true,  recurrMonths: 1  },
-  { id: 'e11', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 2,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e12', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 3,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e13', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 4,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e14', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e15', category: 'internet', description: 'SLT Fiber 50 Mbps',      amount: 3990,  month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
-  // Ads
-  { id: 'e16', category: 'ads',      description: 'Facebook Ads — Packaging', amount: 5000, month: 5,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e17', category: 'ads',      description: 'Facebook Ads — Laser',     amount: 4000, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
-  { id: 'e18', category: 'ads',      description: 'Instagram Story Boost',    amount: 2500, month: 6,  year: 2026, recurring: false, recurrMonths: 1  },
-];
-
-// Seed monthly revenues (mock — in a real system this comes from invoices)
-const SEED_REVENUES = [
-  { month: 1, revenue: 320000 },
-  { month: 2, revenue: 410000 },
-  { month: 3, revenue: 280000 },
-  { month: 4, revenue: 540000 },
-  { month: 5, revenue: 710000 },
-  { month: 6, revenue: 630000 },
-];
-
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const fmt = (n) => `Rs.${Math.abs(n).toLocaleString()}`;
 const getCat = (id) => CATEGORIES.find(c => c.id === id);
 
-export default function PnLTracker() {
+export default function PnLTracker({ isDark = true }) {
   const currentYear  = 2026;
   const currentMonth = 6; // June
   const [selectedYear,  setSelectedYear]  = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(null); // null = full year view
-  const [expenses,  setExpenses]  = useState(SEED_EXPENSES);
-  const [revenues,  setRevenues]  = useState(SEED_REVENUES);
+  const [expenses,  setExpenses]  = useState([]);
+  const [revenues,  setRevenues]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
   const [showAddExpense,  setShowAddExpense]  = useState(false);
   const [showAddRevenue,  setShowAddRevenue]  = useState(false);
   const [expandedCats, setExpandedCats] = useState([]);
+
+  // Fetch Data
+  useEffect(() => {
+    async function fetchData() {
+      const [expRes, revRes] = await Promise.all([
+        supabase.from('pnl_expenses').select('*').order('created_at', { ascending: false }),
+        supabase.from('pnl_revenues').select('*')
+      ]);
+      
+      if (expRes.data) {
+        setExpenses(expRes.data.map(e => ({ ...e, recurrMonths: e.recurr_months })));
+      }
+      if (revRes.data) {
+        setRevenues(revRes.data);
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
 
   // Form state
   const [fCat,   setFCat]   = useState('domain');
@@ -127,37 +111,62 @@ export default function PnLTracker() {
   const toggleCat = (id) =>
     setExpandedCats(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
 
-  const handleAddExpense = (e) => {
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!fDesc || !fAmt) return;
     const newExp = {
-      id: `e-${Date.now()}`,
       category: fCat,
       description: fDesc,
       amount: parseFloat(fAmt),
       month: parseInt(fMonth),
       year: selectedYear,
       recurring: false,
-      recurrMonths: 1,
+      recurr_months: 1,
     };
-    setExpenses(prev => [...prev, newExp]);
-    setShowAddExpense(false);
-    setFDesc(''); setFAmt('');
+    
+    const { data, error } = await supabase.from('pnl_expenses').insert(newExp).select();
+    if (data && data.length > 0) {
+      setExpenses(prev => [...prev, { ...data[0], recurrMonths: data[0].recurr_months }]);
+      setShowAddExpense(false);
+      setFDesc(''); setFAmt('');
+    } else {
+      console.error('Failed to add expense:', error);
+    }
   };
 
-  const handleAddRevenue = (e) => {
+  const handleAddRevenue = async (e) => {
     e.preventDefault();
     if (!fRev) return;
-    setRevenues(prev => {
-      const exists = prev.find(r => r.month === parseInt(fRevMonth));
-      if (exists) return prev.map(r => r.month === parseInt(fRevMonth) ? { ...r, revenue: r.revenue + parseFloat(fRev) } : r);
-      return [...prev, { month: parseInt(fRevMonth), revenue: parseFloat(fRev) }];
-    });
+    
+    const monthNum = parseInt(fRevMonth);
+    const amount = parseFloat(fRev);
+    const exists = revenues.find(r => r.month === monthNum && r.year === selectedYear);
+    
+    if (exists) {
+      const { data, error } = await supabase.from('pnl_revenues')
+        .update({ revenue: exists.revenue + amount })
+        .eq('id', exists.id)
+        .select();
+      if (data && data.length > 0) {
+        setRevenues(prev => prev.map(r => r.id === exists.id ? data[0] : r));
+      }
+    } else {
+      const { data, error } = await supabase.from('pnl_revenues')
+        .insert({ month: monthNum, year: selectedYear, revenue: amount })
+        .select();
+      if (data && data.length > 0) {
+        setRevenues(prev => [...prev, data[0]]);
+      }
+    }
+    
     setShowAddRevenue(false);
     setFRev('');
   };
 
-  const handleDeleteExpense = (id) => setExpenses(prev => prev.filter(e => e.id !== id));
+  const handleDeleteExpense = async (id) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    await supabase.from('pnl_expenses').delete().eq('id', id);
+  };
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
@@ -180,7 +189,7 @@ export default function PnLTracker() {
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setSelectedMonth(null)}
-              className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === null ? 'bg-brand-blue/20 border-brand-blue text-white' : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'}`}
+              className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === null ? `bg-brand-blue/20 border-brand-blue ${isDark ? 'text-white' : 'text-brand-blue shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
             >
               Full Year
             </button>
@@ -188,7 +197,7 @@ export default function PnLTracker() {
               <button
                 key={m}
                 onClick={() => setSelectedMonth(i + 1)}
-                className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === i + 1 ? 'bg-brand-pink/20 border-brand-pink text-white' : 'bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-700'}`}
+                className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${selectedMonth === i + 1 ? `bg-brand-pink/20 border-brand-pink ${isDark ? 'text-white' : 'text-brand-pink shadow-sm'}` : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`}`}
               >
                 {m}
               </button>

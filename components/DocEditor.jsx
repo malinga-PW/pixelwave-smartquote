@@ -9,7 +9,8 @@ export default function DocEditor({
   viewDocument, 
   onSaveDocument, 
   onConvertDocument,
-  documents 
+  documents,
+  isDark = true
 }) {
   const [selectedPresetId, setSelectedPresetId] = useState(mockAIIntakePresets[0].id);
   const [rawText, setRawText] = useState(mockAIIntakePresets[0].rawMessage);
@@ -215,10 +216,10 @@ export default function DocEditor({
                   key={preset.id}
                   onClick={() => handlePresetChange(preset.id)}
                   className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border ${
-                    selectedPresetId === preset.id
-                      ? 'bg-gradient-to-r from-brand-blue/20 to-brand-pink/15 border-brand-pink text-white shadow-sm'
-                      : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200 hover:border-slate-750'
-                  }`}
+                    selectedPresetId === preset.id 
+                      ? `bg-gradient-to-r from-brand-blue/20 to-brand-pink/15 border-brand-pink ${isDark ? 'text-white' : 'text-brand-pink shadow-sm'}`
+                      : `border-transparent hover:border-slate-800 ${isDark ? 'bg-slate-950/20 text-slate-400 hover:bg-slate-900' : 'bg-slate-200/50 text-slate-600 hover:bg-slate-200'}`
+                    }`}
                 >
                   {preset.title.replace(' (WhatsApp)', '').replace(' (Email)', '')}
                 </button>
@@ -517,8 +518,8 @@ export default function DocEditor({
                           disabled={items.length === 1}
                           className={`p-1.5 rounded-lg border border-slate-850 transition-colors ${
                             items.length === 1 
-                              ? 'text-slate-700 cursor-not-allowed border-slate-900' 
-                              : 'text-slate-500 hover:text-red-400 hover:bg-red-950/20'
+                              ? `${isDark ? 'text-slate-700 border-slate-900' : 'text-slate-400 border-slate-300'} cursor-not-allowed` 
+                              : `hover:border-brand-blue ${isDark ? 'text-slate-300 hover:text-white bg-slate-950 border-slate-800' : 'text-slate-700 hover:text-brand-blue bg-white border-slate-200'}`
                           }`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
