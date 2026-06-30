@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   LayoutDashboard, FileText, Globe, Cpu, ChevronRight, 
-  Settings, Users, Calendar, DollarSign, Briefcase, Share2, Truck
+  Settings, Users, Calendar, DollarSign, Briefcase, Share2, Truck, TrendingUp
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
@@ -14,6 +14,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     { id: 'calendar',   label: 'Operations Planner',icon: Calendar },
     { id: 'marketing',  label: 'n8n Campaigns',     icon: Share2 },
     { id: 'suppliers',  label: 'Supplier Tracker',  icon: Truck },
+    { id: 'pnl',        label: 'P&L Tracker',       icon: TrendingUp },
     { id: 'portal',     label: 'Client Portal',     icon: Globe },
     { id: 'customizer', label: 'Brand Customizer',  icon: Settings },
     { id: 'n8n',        label: 'n8n AI Workflows',  icon: Cpu },

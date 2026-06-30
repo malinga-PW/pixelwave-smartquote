@@ -13,6 +13,7 @@ import KanbanBoard from '../components/KanbanBoard';
 import MarketingHub from '../components/MarketingHub';
 import BrandCustomizer from '../components/BrandCustomizer';
 import SupplierTracker from '../components/SupplierTracker';
+import PnLTracker from '../components/PnLTracker';
 import { initialDocuments } from '../data/mockDatabase';
 import { supabase } from '../lib/supabaseClient';
 
@@ -304,6 +305,10 @@ export default function Home() {
 
           {activeTab === 'suppliers' && (
             <SupplierTracker />
+          )}
+
+          {activeTab === 'pnl' && (
+            <PnLTracker />
           )}
 
           {activeTab === 'portal' && (
