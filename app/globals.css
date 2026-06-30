@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #0b54fe;
+  --color-brand-cyan: #009eff;
+  --color-brand-pink: #fc0fc0;
+  --font-sans: 'Outfit', var(--font-geist-sans), sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+}
+
+:root {
+  --background: #090d16;
+  --foreground: #f8fafc;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Outfit', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-glow-blue {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(11, 84, 254, 0.15);
+  box-shadow: 0 0 20px rgba(11, 84, 254, 0.05);
+}
+
+.glass-panel-glow-pink {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(252, 15, 192, 0.15);
+  box-shadow: 0 0 20px rgba(252, 15, 192, 0.05);
+}
+
+/* Gradient text */
+.text-gradient-blue-pink {
+  background: linear-gradient(135deg, #009eff 0%, #0b54fe 50%, #fc0fc0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-cyan-blue {
+  background: linear-gradient(135deg, #009eff 0%, #0b54fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Interactive flow pulse animations */
+@keyframes pulse-flow {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-pulse-flow {
+  stroke-dasharray: 8, 4;
+  animation: pulse-flow 1.5s linear infinite;
+}
+
+/* Print layout settings */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  @page {
+    size: A4;
+    margin: 15mm 20mm;
+  }
+  table {
+    page-break-inside: avoid;
+  }
+}
