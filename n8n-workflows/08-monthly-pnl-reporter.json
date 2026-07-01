@@ -1,0 +1,191 @@
+{
+  "name": "08 - Monthly P&L Reporter",
+  "nodes": [
+    {
+      "id": "schedule-monthly",
+      "name": "Monthly Schedule (1st 7 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "months", "monthsInterval": 1}]
+        },
+        "triggerTimes": {
+          "hour": 7,
+          "minute": 0,
+          "dayOfMonth": 1
+        }
+      }
+    },
+    {
+      "id": "code-prev-month",
+      "name": "Calculate Previous Month",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth(); // 0=Jan\n// Previous month\nlet prevMonth = month - 1;\nlet prevYear = year;\nif (prevMonth < 0) { prevMonth = 11; prevYear = year - 1; }\n\nconst monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];\n\nreturn {\n  report_month: prevMonth + 1,  // 1-12\n  report_year: prevYear,\n  month_name: monthNames[prevMonth] + ' ' + prevYear\n};"
+      }
+    },
+    {
+      "id": "fetch-expenses",
+      "name": "Supabase - Fetch Expenses",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/pnl_expenses?select=*&expense_month=eq.{{ $json.report_month }}&expense_year=eq.{{ $json.report_year }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-revenues",
+      "name": "Supabase - Fetch Revenues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/pnl_revenues?select=*&revenue_month=eq.{{ $json.report_month }}&revenue_year=eq.{{ $json.report_year }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-calc-pnl",
+      "name": "Calculate P&L Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const expenses = $node['Supabase - Fetch Expenses'].all().map(i => i.json);\nconst revenues = $node['Supabase - Fetch Revenues'].all().map(i => i.json);\n\nconst totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);\nconst totalRevenues = revenues.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);\nconst netProfit = totalRevenues - totalExpenses;\n\n// Group expenses by category\nconst byCategory = {};\nfor (const e of expenses) {\n  const cat = e.category || 'other';\n  if (!byCategory[cat]) byCategory[cat] = 0;\n  byCategory[cat] += parseFloat(e.amount || 0);\n}\n\n// Group revenues by source\nconst bySource = {};\nfor (const r of revenues) {\n  const src = r.source || 'Other';\n  if (!bySource[src]) bySource[src] = 0;\n  bySource[src] += parseFloat(r.amount || 0);\n}\n\nreturn {\n  report_month: $json.report_month,\n  report_year: $json.report_year,\n  month_name: $json.month_name,\n  total_expenses: totalExpenses,\n  total_revenues: totalRevenues,\n  net_profit: netProfit,\n  profit_margin_pct: totalRevenues > 0 ? ((netProfit / totalRevenues) * 100).toFixed(1) : 0,\n  expense_categories: byCategory,\n  revenue_sources: bySource,\n  expense_count: expenses.length,\n  revenue_count: revenues.length\n};"
+      }
+    },
+    {
+      "id": "gemini-report",
+      "name": "Gemini - Write P&L Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `You are a financial analyst. Write a brief, professional monthly P&L summary report for the business owner based on these numbers. Return ONLY JSON.\n\nPeriod: ${$json.month_name}\nRevenue: LKR ${$json.total_revenues.toLocaleString()}\nExpenses: LKR ${$json.total_expenses.toLocaleString()}\nNet Profit: LKR ${$json.net_profit.toLocaleString()}\nMargin: ${$json.profit_margin_pct}%\nExpenses: ${JSON.stringify($json.expense_categories)}\nRevenue Sources: ${JSON.stringify($json.revenue_sources)}\n\n{\n  \"executive_summary\": \"2-3 sentence summary\",\n  \"key_insight\": \"One key observation\",\n  \"recommendation\": \"One actionable recommendation\"\n}`}]}]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-report",
+      "name": "Parse Report & Save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const resp = $input.first().json;\nconst text = resp.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g,'').replace(/```/g,'').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) {\n  parsed = { executive_summary: 'P&L report generated', key_insight: '', recommendation: '' };\n}\n\nreturn { ...$json, ...parsed };"
+      }
+    },
+    {
+      "id": "email-pnl-report",
+      "name": "Email P&L Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1500, 200],
+      "parameters": {
+        "fromEmail": "finance@pixelwave.lk",
+        "toEmail": "admin@pixelwave.lk",
+        "subject": "=Monthly P&L Report - {{ $json.month_name }}",
+        "text": "={{ 'P&L SUMMARY - ' + $json.month_name + '\\n\\n' +\n'Revenue: LKR ' + $json.total_revenues.toLocaleString() + '\\n' +\n'Expenses: LKR ' + $json.total_expenses.toLocaleString() + '\\n' +\n'Net Profit: LKR ' + $json.net_profit.toLocaleString() + '\\n' +\n'Margin: ' + $json.profit_margin_pct + '%\\n\\n' +\n'EXECUTIVE SUMMARY:\\n' + $json.executive_summary + '\\n\\n' +\n'KEY INSIGHT:\\n' + $json.key_insight + '\\n\\n' +\n'RECOMMENDATION:\\n' + $json.recommendation }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "log-report",
+      "name": "Supabase - Log Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'pnl_report_generated'" },
+            { "name": "entity_type", "value": "'pnl'" },
+            { "name": "detail", "value": "='Monthly P&L report for ' + $json.month_name + ': Rev LKR ' + $json.total_revenues + ', Exp LKR ' + $json.total_expenses + ', Net LKR ' + $json.net_profit" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Monthly Schedule (1st 7 AM)": { "main": [[ { "node": "Calculate Previous Month", "type": "main", "index": 0 } ]] },
+    "Calculate Previous Month": {
+      "main": [
+        [{ "node": "Supabase - Fetch Expenses", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Fetch Revenues", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Fetch Expenses": { "main": [[ { "node": "Calculate P&L Summary", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Revenues": { "main": [[ { "node": "Calculate P&L Summary", "type": "main", "index": 0 } ]] },
+    "Calculate P&L Summary": { "main": [[ { "node": "Gemini - Write P&L Summary", "type": "main", "index": 0 } ]] },
+    "Gemini - Write P&L Summary": { "main": [[ { "node": "Parse Report & Save", "type": "main", "index": 0 } ]] },
+    "Parse Report & Save": {
+      "main": [
+        [{ "node": "Email P&L Report", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Log Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email P&L Report": { "main": [[ ]] },
+    "Supabase - Log Report": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Finance" }, { "name": "P&L" }, { "name": "Reporting" }]
+}

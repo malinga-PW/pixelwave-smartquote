@@ -1,0 +1,167 @@
+{
+  "name": "07 - Kanban Production Notifier",
+  "nodes": [
+    {
+      "id": "webhook-kanban",
+      "name": "Supabase Webhook (work_orders)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "kanban-update",
+      "parameters": {
+        "path": "kanban-update",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "code-parse-kb",
+      "name": "Parse Work Order Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const input = $input.first().json;\nconst record = input.record || input.new || {};\nconst old = input.old || {};\n\nreturn {\n  work_order_id: record.id,\n  title: record.title || 'Untitled',\n  client_name: record.client_name || 'Unknown',\n  kanban_col: record.kanban_col || 'todo',\n  old_col: old.kanban_col || '',\n  priority: record.priority || 'normal',\n  due_date: record.due_date || '',\n  assigned_to: record.assigned_to || 'Unassigned',\n  notes: record.notes || '',\n  quotation_id: record.quotation_id || '',\n  event_type: input.type || 'INSERT'\n};"
+      }
+    },
+    {
+      "id": "switch-col",
+      "name": "Route by Column Move",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.kanban_col }}",
+        "rules": [
+          { "value2": "todo", "output": 0 },
+          { "value2": "inprogress", "output": 1 },
+          { "value2": "review", "output": 2 },
+          { "value2": "done", "output": 3 }
+        ],
+        "fallbackOutput": 4
+      }
+    },
+    {
+      "id": "gemini-kb-msg",
+      "name": "Gemini - Generate Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Kanban update notification. Generate a brief team message. Return ONLY JSON.\n\nWork: ${$json.title}\nClient: ${$json.client_name}\nMoved to: ${$json.kanban_col}\nPriority: ${$json.priority}\nAssigned: ${$json.assigned_to}\n\n{\n  \"team_message\": \"Brief update for team chat\",\n  \"emoji\": \"emoji representing the stage\"\n}`}]}]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-parse-kb-msg",
+      "name": "Parse Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const resp = $input.first().json;\nconst text = resp.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g,'').replace(/```/g,'').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) {\n  parsed = { team_message: $json.title + ' moved to ' + $json.kanban_col, emoji: '🔔' };\n}\n\nreturn { ...$json, ...parsed };"
+      }
+    },
+    {
+      "id": "email-team",
+      "name": "Email Team Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1280, 200],
+      "parameters": {
+        "fromEmail": "notifications@pixelwave.lk",
+        "toEmail": "team@pixelwave.lk",
+        "subject": "={{ $json.emoji + ' Kanban: ' + $json.title + ' → ' + $json.kanban_col }}",
+        "text": "={{ $json.team_message + '\\n\\nClient: ' + $json.client_name + '\\nAssigned: ' + $json.assigned_to + '\\nPriority: ' + $json.priority + '\\nDue: ' + $json.due_date }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "log-kb",
+      "name": "Supabase - Log Kanban Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1280, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'kanban_moved'" },
+            { "name": "entity_type", "value": "'work_order'" },
+            { "name": "entity_id", "value": "={{ $json.work_order_id }}" },
+            { "name": "detail", "value": "='Work order \"' + $json.title + '\" moved to ' + $json.kanban_col" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "noop-other",
+      "name": "No Action",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 600],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Supabase Webhook (work_orders)": { "main": [[ { "node": "Parse Work Order Event", "type": "main", "index": 0 } ]] },
+    "Parse Work Order Event": { "main": [[ { "node": "Route by Column Move", "type": "main", "index": 0 } ]] },
+    "Route by Column Move": {
+      "main": [
+        [{ "node": "Gemini - Generate Notification", "type": "main", "index": 0 }],
+        [{ "node": "Gemini - Generate Notification", "type": "main", "index": 0 }],
+        [{ "node": "Gemini - Generate Notification", "type": "main", "index": 0 }],
+        [{ "node": "Gemini - Generate Notification", "type": "main", "index": 0 }],
+        [{ "node": "No Action", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini - Generate Notification": { "main": [[ { "node": "Parse Notification", "type": "main", "index": 0 } ]] },
+    "Parse Notification": {
+      "main": [
+        [{ "node": "Email Team Notification", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Log Kanban Event", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Team Notification": { "main": [[ ]] },
+    "Supabase - Log Kanban Event": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Kanban" }, { "name": "Production" }, { "name": "Notifications" }]
+}

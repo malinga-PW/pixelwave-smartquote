@@ -1,0 +1,222 @@
+{
+  "name": "03 - Payment Follow-up AI Agent",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Daily Schedule (8 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [ {"field": "days", "hoursInterval": 24} ]
+        },
+        "triggerTimes": {
+          "hour": 8,
+          "minute": 0
+        }
+      }
+    },
+    {
+      "id": "supabase-fetch-unpaid",
+      "name": "Supabase - Fetch Unpaid Documents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations?status=eq.Unpaid&select=*,customers!inner(name,email,phone)",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "code-merge-items",
+      "name": "Flatten & Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  const customer = data.customers || {};\n  \n  // Only include items older than 7 days\n  const created = new Date(data.created_at || data.issue_date);\n  const daysOld = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);\n  \n  if (daysOld < 7) continue;\n  \n  results.push({\n    quote_no: data.quote_no,\n    grand_total: data.grand_total,\n    customer_name: customer.name || 'Unknown',\n    customer_email: customer.email || '',\n    customer_phone: customer.phone || '',\n    days_overdue: Math.round(daysOld),\n    created_at: data.created_at\n  });\n}\n\nreturn results;"
+      }
+    },
+    {
+      "id": "loop-over-items",
+      "name": "Loop Each Client",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "gemini-message",
+      "name": "Gemini - Write Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}"}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `You are a payment reminder assistant for PixelWave Solutions. Generate a friendly WhatsApp message for an overdue invoice. Keep it warm, professional, and short. Return ONLY valid JSON.\n\nClient: ${$json.customer_name}\nInvoice: ${$json.quote_no}\nAmount: LKR ${$json.grand_total.toLocaleString()}\nDays Overdue: ${$json.days_overdue}\nPayment Link: https://smartquote.pixelwave.lk/secure/${$json.quote_no}\n\n{\"message\": \"Your message here\", \"tone\": \"friendly\"}`}]}]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "code-extract-message",
+      "name": "Extract Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g, '').replace(/```/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) { parsed = { message: 'Gentle reminder: Your invoice is due.', tone: 'friendly' }; }\n\nreturn { ...$json, message_text: parsed.message };"
+      }
+    },
+    {
+      "id": "redis-check",
+      "name": "Redis - Check Sent Recently",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1500, 240],
+      "parameters": {
+        "operation": "get",
+        "key": "={{ 'pmt_remind_' + $json.quote_no }}"
+      }
+    },
+    {
+      "id": "if-sent",
+      "name": "Already Reminded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1680, 240],
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json.value || '' }}", "operation": "isEmpty" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "redis-mark",
+      "name": "Redis - Mark Sent",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1860, 300],
+      "parameters": {
+        "operation": "set",
+        "key": "={{ 'pmt_remind_' + $json.quote_no }}",
+        "value": "={{ new Date().toISOString() }}",
+        "expire": 259200
+      }
+    },
+    {
+      "id": "send-email",
+      "name": "Send Email Reminder",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [2040, 200],
+      "parameters": {
+        "fromEmail": "billing@pixelwave.lk",
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "=Reminder: Invoice {{ $json.quote_no }}",
+        "text": "={{ $json.message_text }}\n\nPay here: https://smartquote.pixelwave.lk/secure/{{ $json.quote_no }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2040, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/{{ $credentials.whatsappPhoneNumberId }}/messages",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.whatsappApiToken }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "messaging_product", "value": "'whatsapp'" },
+            { "name": "to", "value": "={{ $json.customer_phone }}" },
+            { "name": "type", "value": "'text'" },
+            { "name": "text", "value": "={ \"preview_url\": true, \"body\": $json.message_text }" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Schedule (8 AM)": { "main": [[ { "node": "Supabase - Fetch Unpaid Documents", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Unpaid Documents": { "main": [[ { "node": "Flatten & Filter", "type": "main", "index": 0 } ]] },
+    "Flatten & Filter": { "main": [[ { "node": "Loop Each Client", "type": "main", "index": 0 } ]] },
+    "Loop Each Client": { "main": [[ { "node": "Gemini - Write Reminder", "type": "main", "index": 0 } ]] },
+    "Gemini - Write Reminder": { "main": [[ { "node": "Extract Message", "type": "main", "index": 0 } ]] },
+    "Extract Message": { "main": [[ { "node": "Redis - Check Sent Recently", "type": "main", "index": 0 } ]] },
+    "Redis - Check Sent Recently": { "main": [[ { "node": "Already Reminded?", "type": "main", "index": 0 } ]] },
+    "Already Reminded?": {
+      "main": [
+        [{ "node": "Redis - Mark Sent", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Redis - Mark Sent": {
+      "main": [
+        [{ "node": "Send Email Reminder", "type": "main", "index": 0 }],
+        [{ "node": "Send WhatsApp Reminder", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Email Reminder": { "main": [[ ]] },
+    "Send WhatsApp Reminder": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    { "name": "AI Agent" },
+    { "name": "Payment" },
+    { "name": "WhatsApp" }
+  ]
+}

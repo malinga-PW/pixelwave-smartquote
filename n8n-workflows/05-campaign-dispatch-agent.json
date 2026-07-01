@@ -1,0 +1,324 @@
+{
+  "name": "05 - Campaign Dispatch AI Agent",
+  "nodes": [
+    {
+      "id": "schedule-campaign",
+      "name": "Schedule (Every 30 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "minutes", "minutesInterval": 30}]
+        }
+      }
+    },
+    {
+      "id": "fetch-pending",
+      "name": "Supabase - Fetch Pending Campaigns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/marketing_campaigns?status=eq.draft&select=*&order=created_at.asc",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "has-campaigns",
+      "name": "Has Pending Campaigns?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "array": [
+            { "value1": "={{ $json }}", "operation": "isNotEmpty" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "loop-campaigns",
+      "name": "Loop Each Campaign",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "mark-sending",
+      "name": "Supabase - Mark Sending",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 200],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/marketing_campaigns?id=eq.{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "status", "value": "'sent'" },
+            { "name": "sent_at", "value": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "switch-channel",
+      "name": "Route by Channel",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1100, 400],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.channel }}",
+        "rules": [
+          { "value2": "whatsapp", "output": 0 },
+          { "value2": "email", "output": 1 },
+          { "value2": "sms", "output": 2 }
+        ],
+        "fallbackOutput": 3
+      }
+    },
+    {
+      "id": "supabase-customers",
+      "name": "Supabase - Get Customer Phones",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/customers?select=name,phone,email&not.is.phone=null&limit=100",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gemini-personalize",
+      "name": "Gemini - Personalize Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1480, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Personalize this marketing message for the recipient. Keep the core message but make it feel personal. Return ONLY JSON.\n\nOriginal Campaign: ${$json.message}\nRecipient Name: ${$json.name}\nChannel: ${$json.channel}\n\n{\n  \"personalized_message\": \"Message with {name} replaced\",\n  \"greeting\": \"Hi {name}\"\n}`}]}]"
+            }
+          ]
+        },
+        "options": {
+          "rateLimit": { "maxRequests": 10 }
+        }
+      }
+    },
+    {
+      "id": "code-personalize",
+      "name": "Parse & Prepare Send",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const resp = $input.first().json;\nconst text = resp.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g,'').replace(/```/g,'').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) { parsed = { personalized_message: $json.message, greeting: 'Hi ' + $json.name }; }\n\nconst finalMsg = parsed.personalized_message.replace(/{name}/g, $json.name);\nreturn { ...$json, final_message: finalMsg };"
+      }
+    },
+    {
+      "id": "send-whatsapp-campaign",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1840, 120],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/{{ $credentials.whatsappPhoneNumberId }}/messages",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.whatsappApiToken }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "messaging_product", "value": "'whatsapp'" },
+            { "name": "to", "value": "={{ $json.phone }}" },
+            { "name": "type", "value": "'text'" },
+            { "name": "text", "value": "={ \"preview_url\": true, \"body\": $json.final_message }" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "send-email-campaign",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1840, 320],
+      "parameters": {
+        "fromEmail": "marketing@pixelwave.lk",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.name }}, check this out!",
+        "text": "={{ $json.final_message }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "update-sent-count",
+      "name": "Supabase - Update Sent Count",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2020, 300],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/marketing_campaigns?id=eq.{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "sent_count", "value": "={{ $json.sent_count + 1 || 1 }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-campaign",
+      "name": "Supabase - Log Campaign Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2020, 480],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'campaign_sent'" },
+            { "name": "entity_type", "value": "'marketing_campaign'" },
+            { "name": "entity_id", "value": "={{ $json.id }}" },
+            { "name": "detail", "value": "='Campaign sent to ' + ($json.name || 'contact') + ' via ' + $json.channel" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "noop-skip-campaigns",
+      "name": "No Pending Campaigns",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [680, 500],
+      "parameters": {}
+    },
+    {
+      "id": "noop-channel-unknown",
+      "name": "Unsupported Channel",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1300, 600],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Schedule (Every 30 min)": { "main": [[ { "node": "Supabase - Fetch Pending Campaigns", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Pending Campaigns": { "main": [[ { "node": "Has Pending Campaigns?", "type": "main", "index": 0 } ]] },
+    "Has Pending Campaigns?": {
+      "main": [
+        [{ "node": "Loop Each Campaign", "type": "main", "index": 0 }],
+        [{ "node": "No Pending Campaigns", "type": "main", "index": 0 }]
+      ]
+    },
+    "Loop Each Campaign": {
+      "main": [
+        [{ "node": "Supabase - Mark Sending", "type": "main", "index": 0 }],
+        [{ "node": "Route by Channel", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Mark Sending": { "main": [[ ]] },
+    "Route by Channel": {
+      "main": [
+        [{ "node": "Supabase - Get Customer Phones", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Customer Phones", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Customer Phones", "type": "main", "index": 0 }],
+        [{ "node": "Unsupported Channel", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Get Customer Phones": { "main": [[ { "node": "Gemini - Personalize Message", "type": "main", "index": 0 } ]] },
+    "Gemini - Personalize Message": { "main": [[ { "node": "Parse & Prepare Send", "type": "main", "index": 0 } ]] },
+    "Parse & Prepare Send": {
+      "main": [
+        [{ "node": "Send WhatsApp", "type": "main", "index": 0 }],
+        [{ "node": "Send Email", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send WhatsApp": { "main": [[ { "node": "Supabase - Update Sent Count", "type": "main", "index": 0 } ]] },
+    "Send Email": { "main": [[ { "node": "Supabase - Update Sent Count", "type": "main", "index": 0 } ]] },
+    "Supabase - Update Sent Count": { "main": [[ { "node": "Supabase - Log Campaign Send", "type": "main", "index": 0 } ]] },
+    "Supabase - Log Campaign Send": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Marketing" }, { "name": "Campaign" }, { "name": "WhatsApp" }]
+}

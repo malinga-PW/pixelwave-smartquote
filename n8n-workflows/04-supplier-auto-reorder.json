@@ -1,0 +1,206 @@
+{
+  "name": "04 - Supplier Auto-Reorder Agent",
+  "nodes": [
+    {
+      "id": "schedule-weekly",
+      "name": "Weekly Schedule (Monday 9 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "weeks", "weeksInterval": 1}]
+        },
+        "triggerTimes": {
+          "hour": 9,
+          "minute": 0,
+          "weekday": 1
+        }
+      }
+    },
+    {
+      "id": "fetch-suppliers",
+      "name": "Supabase - Fetch Suppliers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/suppliers?select=id,name,contact,category,notes,is_active&is_active=eq.true",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-purchases",
+      "name": "Supabase - Fetch Recent Purchases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/supplier_purchases?select=*,suppliers(name)&order=purchase_date.desc&limit=100",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-analyze-stock",
+      "name": "Analyze Stock Levels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const suppliers = $node['Supabase - Fetch Suppliers'].all();\nconst purchases = $node['Supabase - Fetch Recent Purchases'].all();\n\n// Group purchases by supplier\nconst supplierMap = {};\nfor (const p of purchases) {\n  const sid = p.json.supplier_id;\n  if (!supplierMap[sid]) supplierMap[sid] = [];\n  supplierMap[sid].push(p.json);\n}\n\n// For each supplier, check if reorder needed\nconst reorders = [];\nfor (const s of suppliers) {\n  const data = s.json;\n  const supPurchases = supplierMap[data.id] || [];\n  \n  // If no purchases in last 60 days, flag for review\n  const latestPurchase = supPurchases.sort((a,b) => new Date(b.purchase_date) - new Date(a.purchase_date))[0];\n  const daysSinceLastOrder = latestPurchase\n    ? Math.floor((Date.now() - new Date(latestPurchase.purchase_date).getTime()) / (1000*60*60*24))\n    : 999;\n\n  if (daysSinceLastOrder > 60) {\n    reorders.push({\n      supplier_id: data.id,\n      supplier_name: data.name,\n      contact: data.contact,\n      category: data.category,\n      last_order_date: latestPurchase?.purchase_date || 'Never',\n      days_since_last_order: daysSinceLastOrder,\n      last_material: latestPurchase?.material || 'N/A',\n      last_quantity: latestPurchase?.quantity || 0,\n      action: 'review'\n    });\n  }\n}\n\nreturn reorders.length > 0 ? reorders : [{ message: 'No reorders needed', count: 0 }];"
+      }
+    },
+    {
+      "id": "filter-reorders",
+      "name": "Has Reorders?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1100, 300],
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $json.count }}", "operation": "isEmpty", "value2": 0 }
+          ]
+        },
+        "options": {
+          "toggle": true
+        }
+      }
+    },
+    {
+      "id": "gemini-reorder-msg",
+      "name": "Gemini - Write Reorder Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1280, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `You are a supply chain manager for a printing company. Generate a professional WhatsApp/Email alert about a supplier needing reorder. Keep it brief. Return ONLY JSON.\n\nSupplier: ${$json.supplier_name}\nMaterial: ${$json.last_material}\nDays since last order: ${$json.days_since_last_order}\nContact: ${$json.contact}\n\n{\n  \"alert_title\": \"Short title\",\n  \"message\": \"Brief alert message for team\",\n  \"priority\": \"normal\"\n}`}]}]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-alert-msg",
+      "name": "Parse Alert & Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1460, 200],
+      "parameters": {
+        "language": "javascript",
+        "code": "const resp = $input.first().json;\nconst text = resp.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g,'').replace(/```/g,'').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) { parsed = { alert_title: 'Reorder Needed', message: 'Supplier needs attention', priority: 'normal' }; }\n\nreturn { ...$json, ...parsed };"
+      }
+    },
+    {
+      "id": "email-reorder",
+      "name": "Email Reorder Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1640, 120],
+      "parameters": {
+        "fromEmail": "procurement@pixelwave.lk",
+        "toEmail": "operations@pixelwave.lk",
+        "subject": "={{ $json.alert_title + ' - ' + $json.supplier_name }}",
+        "text": "={{ $json.message + '\\n\\nSupplier: ' + $json.supplier_name + '\\nContact: ' + $json.contact + '\\nLast Order: ' + $json.last_order_date }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "log-activity",
+      "name": "Supabase - Log Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1640, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'supplier_reorder_alert'" },
+            { "name": "entity_type", "value": "'supplier'" },
+            { "name": "entity_id", "value": "={{ $json.supplier_id }}" },
+            { "name": "detail", "value": "='Reorder alert: ' + $json.supplier_name + ' - ' + $json.days_since_last_order + ' days since last order'" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "noop-skip",
+      "name": "Skip - No Reorders",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1280, 500],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Weekly Schedule (Monday 9 AM)": { "main": [[ { "node": "Supabase - Fetch Suppliers", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Suppliers": { "main": [[ { "node": "Supabase - Fetch Recent Purchases", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Recent Purchases": { "main": [[ { "node": "Analyze Stock Levels", "type": "main", "index": 0 } ]] },
+    "Analyze Stock Levels": { "main": [[ { "node": "Has Reorders?", "type": "main", "index": 0 } ]] },
+    "Has Reorders?": {
+      "main": [
+        [{ "node": "Gemini - Write Reorder Alert", "type": "main", "index": 0 }],
+        [{ "node": "Skip - No Reorders", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini - Write Reorder Alert": { "main": [[ { "node": "Parse Alert & Log", "type": "main", "index": 0 } ]] },
+    "Parse Alert & Log": {
+      "main": [
+        [{ "node": "Email Reorder Alert", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Log Activity", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Reorder Alert": { "main": [[ ]] },
+    "Supabase - Log Activity": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Supplier" }, { "name": "Automation" }]
+}

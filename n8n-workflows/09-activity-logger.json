@@ -1,0 +1,70 @@
+{
+  "name": "09 - Activity Logger (Central Events)",
+  "nodes": [
+    {
+      "id": "webhook-logger",
+      "name": "Supabase Webhook (All Tables)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "activity-log",
+      "parameters": {
+        "path": "activity-log",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "code-classify",
+      "name": "Classify & Log Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const event = $input.first().json;\nconst record = event.record || event.new || {};\nconst oldRecord = event.old || {};\nconst table = event.table || '';\nconst op = event.type || event.op || 'INSERT';\n\n// Map table names to entity types\nconst entityTypeMap = {\n  'quotations': 'quotation',\n  'customers': 'customer',\n  'subscriptions': 'subscription',\n  'work_orders': 'work_order',\n  'suppliers': 'supplier',\n  'supplier_purchases': 'supplier_purchase',\n  'marketing_campaigns': 'marketing_campaign',\n  'pricing_materials': 'pricing',\n  'pricing_services': 'pricing',\n  'planner_tasks': 'planner_task',\n  'pnl_expenses': 'pnl_expense',\n  'pnl_revenues': 'pnl_revenue'\n};\n\nconst entityType = entityTypeMap[table] || table || 'unknown';\n\n// Build action string\nconst actionMap = {\n  'INSERT': 'created',\n  'UPDATE': 'updated',\n  'DELETE': 'deleted'\n};\nconst actionVerb = actionMap[op] || op.toLowerCase();\n\n// Build entity ID\nconst entityId = record.id || record.quote_no || record.name || JSON.stringify(record).slice(0,50);\n\n// Build meaningful detail\nlet detail = '';\nif (table === 'quotations') {\n  const statusChange = oldRecord.status && oldRecord.status !== record.status ? ` (status: ${oldRecord.status} → ${record.status})` : '';\n  detail = `Quotation ${record.quote_no} ${actionVerb}${statusChange}`;\n} else if (table === 'customers') {\n  detail = `Customer ${record.name || record.email} ${actionVerb}`;\n} else if (table === 'work_orders') {\n  detail = `Work Order \"${record.title}\" ${actionVerb} in column \"${record.kanban_col || ''}\"`;\n} else if (table === 'subscriptions') {\n  detail = `Subscription ${record.plan_name} ${actionVerb} for ${record.customer_id?.slice(0,8)}`;\n} else if (table === 'marketing_campaigns') {\n  detail = `Campaign \"${record.name}\" ${actionVerb} (${record.status || ''})`;\n} else {\n  detail = `${table} record ${actionVerb}`;\n}\n\nreturn [{\n  action: `${table?.replace('_','')}_${actionVerb}`,\n  entity_type: entityType,\n  entity_id: entityId,\n  detail: detail,\n  created_at: new Date().toISOString()\n}];"
+      }
+    },
+    {
+      "id": "supabase-log",
+      "name": "Supabase - Write to activity_log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "entity_type", "value": "={{ $json.entity_type }}" },
+            { "name": "entity_id", "value": "={{ $json.entity_id }}" },
+            { "name": "detail", "value": "={{ $json.detail }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Supabase Webhook (All Tables)": { "main": [[ { "node": "Classify & Log Event", "type": "main", "index": 0 } ]] },
+    "Classify & Log Event": { "main": [[ { "node": "Supabase - Write to activity_log", "type": "main", "index": 0 } ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Audit" }, { "name": "Logging" }, { "name": "Infrastructure" }]
+}

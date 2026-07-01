@@ -1,0 +1,272 @@
+{
+  "name": "02 - Document Lifecycle AI Agent",
+  "nodes": [
+    {
+      "id": "webhook-doc-update",
+      "name": "Supabase Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "doc-lifecycle",
+      "parameters": {
+        "path": "doc-lifecycle",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "code-parse-event",
+      "name": "Parse Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const event = $input.first().json;\nconst record = event.record || event.new || {};\nconst oldRecord = event.old || {};\n\nreturn {\n  quote_no: record.quote_no,\n  type: record.type,\n  status: record.status,\n  old_status: oldRecord.status,\n  customer_id: record.customer_id,\n  event_type: event.type || 'UPDATE',\n  timestamp: new Date().toISOString()\n};"
+      }
+    },
+    {
+      "id": "switch-status",
+      "name": "Route by New Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.status }}",
+        "rules": [
+          { "value2": "Approved", "output": 0 },
+          { "value2": "Signed", "output": 1 },
+          { "value2": "Paid", "output": 2 }
+        ],
+        "fallbackOutput": 3
+      }
+    },
+    {
+      "id": "supabase-get-customer",
+      "name": "Supabase - Get Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 150],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/customers?id=eq.{{ $json.customer_id }}&select=name,email,phone",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gemini-convert",
+      "name": "Gemini - Decide Next Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 150],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}"}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Document Lifecycle Manager. A Quote was just APPROVED. Decide the next step. Return ONLY valid JSON, no markdown.\n\nCurrent: {{ $json.quote_no }}\n\n{\n  \"action\": \"convert_to_proforma\",\n  \"new_type\": \"Proforma\",\n  \"new_status\": \"Unpaid\",\n  \"notes\": \"Auto-converted from approved Quote\"\n}`}]}]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "code-gemini-parse",
+      "name": "Parse Gemini Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 150],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g, '').replace(/```/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(clean); } catch(e) { parsed = { action: 'convert_to_proforma', new_type: 'Proforma', new_status: 'Unpaid', notes: 'Auto-converted' }; }\n\nreturn { ...$json, ...parsed };"
+      }
+    },
+    {
+      "id": "supabase-create-proforma",
+      "name": "Supabase - Create Proforma",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "quote_no", "value": "={{ $json.quote_no + '-PI' }}" },
+            { "name": "customer_id", "value": "={{ $json.customer_id }}" },
+            { "name": "issue_date", "value": "={{ new Date().toISOString().slice(0,10) }}" },
+            { "name": "type", "value": "={{ $json.new_type }}" },
+            { "name": "status", "value": "={{ $json.new_status }}" },
+            { "name": "notes", "value": "={{ $json.notes }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "supabase-create-work-order",
+      "name": "Supabase - Create Work Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "quote_no", "value": "={{ $json.quote_no.replace('-AG', '') + '-WO' }}" },
+            { "name": "customer_id", "value": "={{ $json.customer_id }}" },
+            { "name": "issue_date", "value": "={{ new Date().toISOString().slice(0,10) }}" },
+            { "name": "type", "value": "'Order'" },
+            { "name": "status", "value": "'In Production'" },
+            { "name": "notes", "value": "='Auto-generated from signed Agreement ' + $json.quote_no" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "supabase-mark-paid",
+      "name": "Supabase - Mark as Paid",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 600],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations?quote_no=eq.{{ $json.quote_no }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "status", "value": "'Paid'" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "email-notify",
+      "name": "Email Client",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1720, 300],
+      "parameters": {
+        "fromEmail": "billing@pixelwave.lk",
+        "toEmail": "={{ $node['Supabase - Get Customer'].json[0]?.email }}",
+        "subject": "=Document {{ $json.quote_no }} - {{ $json.status }}",
+        "text": "=Hi {{ $node['Supabase - Get Customer'].json[0]?.name }},\n\nYour document {{ $json.quote_no }} has been updated to {{ $json.status }}.\n\nView: https://smartquote.pixelwave.lk/secure/{{ $json.quote_no }}\n\nPixelWave Team",
+        "options": {}
+      }
+    },
+    {
+      "id": "rabbitmq-notify",
+      "name": "Queue Production Order",
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1,
+      "position": [1720, 450],
+      "parameters": {
+        "queue": "production_orders",
+        "dataMode": "postProcess",
+        "sendInputData": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "noop-fallback",
+      "name": "No Action",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1100, 700],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Supabase Webhook": { "main": [[ { "node": "Parse Event", "type": "main", "index": 0 } ]] },
+    "Parse Event": { "main": [[ { "node": "Route by New Status", "type": "main", "index": 0 } ]] },
+    "Route by New Status": {
+      "main": [
+        [{ "node": "Supabase - Get Customer", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Customer", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Customer", "type": "main", "index": 0 }],
+        [{ "node": "No Action", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Get Customer": {
+      "main": [
+        [{ "node": "Gemini - Decide Next Action", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Create Work Order", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Mark as Paid", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini - Decide Next Action": { "main": [[ { "node": "Parse Gemini Decision", "type": "main", "index": 0 } ]] },
+    "Parse Gemini Decision": { "main": [[ { "node": "Supabase - Create Proforma", "type": "main", "index": 0 } ]] },
+    "Supabase - Create Proforma": { "main": [[ { "node": "Email Client", "type": "main", "index": 0 } ]] },
+    "Supabase - Create Work Order": { "main": [[ { "node": "Queue Production Order", "type": "main", "index": 0 } ]] },
+    "Queue Production Order": { "main": [[ { "node": "Email Client", "type": "main", "index": 0 } ]] },
+    "Supabase - Mark as Paid": { "main": [[ { "node": "Email Client", "type": "main", "index": 0 } ]] },
+    "Email Client": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    { "name": "AI Agent" },
+    { "name": "Lifecycle" },
+    { "name": "Automation" }
+  ]
+}

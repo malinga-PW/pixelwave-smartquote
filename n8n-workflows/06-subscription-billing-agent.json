@@ -1,0 +1,227 @@
+{
+  "name": "06 - Subscription Billing Agent",
+  "nodes": [
+    {
+      "id": "schedule-daily",
+      "name": "Daily Schedule (6 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "days", "hoursInterval": 24}]
+        },
+        "triggerTimes": {
+          "hour": 6,
+          "minute": 0
+        }
+      }
+    },
+    {
+      "id": "fetch-subscriptions",
+      "name": "Supabase - Fetch Active Subs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/subscriptions?select=*,customers!inner(name,email,phone,address)&status=eq.Active&order=renewal_date.asc",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-check-renewal",
+      "name": "Check Renewal Dates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const items = $input.all();\nconst today = new Date();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  const renewal = new Date(data.renewal_date);\n  const daysUntil = Math.ceil((renewal.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));\n  \n  // Only process renewals within next 3 days\n  if (daysUntil >= 0 && daysUntil <= 3) {\n    const customer = data.customers || {};\n    const quoteNo = `SUB-${data.id?.slice(0,8)}-${renewal.getFullYear()}${String(renewal.getMonth()+1).padStart(2,'0')}`;\n    \n    results.push({\n      sub_id: data.id,\n      customer_id: data.customer_id,\n      customer_name: customer.name || 'Unknown',\n      customer_email: customer.email || '',\n      customer_phone: customer.phone || '',\n      customer_address: customer.address || '',\n      plan_name: data.plan_name,\n      monthly_fee: parseFloat(data.monthly_fee) || 0,\n      renewal_date: data.renewal_date,\n      days_until_renewal: daysUntil,\n      quote_no: quoteNo,\n      issue_date: today.toISOString().slice(0,10),\n      type: 'Invoice',\n      status: 'Sent'\n    });\n  }\n}\n\nreturn results.length > 0 ? results : [{ message: 'No renewals due soon', count: 0 }];"
+      }
+    },
+    {
+      "id": "has-renewals",
+      "name": "Has Renewals Due?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $json.count }}", "operation": "isEmpty", "value2": 0 }
+          ]
+        },
+        "options": { "toggle": true }
+      }
+    },
+    {
+      "id": "loop-renewals",
+      "name": "Loop Each Renewal",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "supabase-create-invoice",
+      "name": "Supabase - Create Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "quote_no", "value": "={{ $json.quote_no }}" },
+            { "name": "customer_id", "value": "={{ $json.customer_id }}" },
+            { "name": "issue_date", "value": "={{ $json.issue_date }}" },
+            { "name": "type", "value": "'Invoice'" },
+            { "name": "status", "value": "'Sent'" },
+            { "name": "subtotal", "value": "={{ $json.monthly_fee }}" },
+            { "name": "grand_total", "value": "={{ $json.monthly_fee }}" },
+            { "name": "notes", "value": "='Auto-billing: ' + $json.plan_name + ' subscription renewal'" },
+            { "name": "currency", "value": "'LKR'" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "supabase-create-item",
+      "name": "Supabase - Create Invoice Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotation_items",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "quotation_id", "value": "={{ $node['Supabase - Create Invoice'].json[0]?.id }}" },
+            { "name": "item_title", "value": "='Subscription: ' + $json.plan_name" },
+            { "name": "description", "value": "='Monthly subscription renewal for ' + $json.plan_name" },
+            { "name": "quantity", "value": "=1" },
+            { "name": "unit_price", "value": "={{ $json.monthly_fee }}" },
+            { "name": "line_total", "value": "={{ $json.monthly_fee }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "email-invoice",
+      "name": "Email Invoice to Client",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1500, 300],
+      "parameters": {
+        "fromEmail": "billing@pixelwave.lk",
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "=Your Subscription Invoice - {{ $json.quote_no }}",
+        "text": "=Hi {{ $json.customer_name }},\n\nYour {{ $json.plan_name }} subscription renewal invoice is ready.\n\nInvoice: {{ $json.quote_no }}\nAmount: LKR {{ $json.monthly_fee.toLocaleString() }}\nDue: {{ $json.renewal_date }}\n\nPay here: https://smartquote.pixelwave.lk/secure/{{ $json.quote_no }}\n\nPixelWave Billing",
+        "options": {}
+      }
+    },
+    {
+      "id": "supabase-log",
+      "name": "Supabase - Log Billing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'subscription_invoice_created'" },
+            { "name": "entity_type", "value": "'subscription'" },
+            { "name": "entity_id", "value": "={{ $json.sub_id }}" },
+            { "name": "detail", "value": "='Auto-billing invoice ' + $json.quote_no + ' for ' + $json.customer_name + ' - LKR ' + $json.monthly_fee" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "noop-no-renewals",
+      "name": "No Renewals Due",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1100, 600],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Daily Schedule (6 AM)": { "main": [[ { "node": "Supabase - Fetch Active Subs", "type": "main", "index": 0 } ]] },
+    "Supabase - Fetch Active Subs": { "main": [[ { "node": "Check Renewal Dates", "type": "main", "index": 0 } ]] },
+    "Check Renewal Dates": { "main": [[ { "node": "Has Renewals Due?", "type": "main", "index": 0 } ]] },
+    "Has Renewals Due?": {
+      "main": [
+        [{ "node": "Loop Each Renewal", "type": "main", "index": 0 }],
+        [{ "node": "No Renewals Due", "type": "main", "index": 0 }]
+      ]
+    },
+    "Loop Each Renewal": {
+      "main": [
+        [{ "node": "Supabase - Create Invoice", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Create Invoice Item", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Create Invoice": { "main": [[ ]] },
+    "Supabase - Create Invoice Item": {
+      "main": [
+        [{ "node": "Email Invoice to Client", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Log Billing", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Invoice to Client": { "main": [[ ]] },
+    "Supabase - Log Billing": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Subscription" }, { "name": "Billing" }, { "name": "Automation" }]
+}

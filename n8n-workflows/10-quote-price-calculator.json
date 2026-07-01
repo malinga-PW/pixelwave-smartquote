@@ -1,0 +1,196 @@
+{
+  "name": "10 - Quote Price Calculator Agent",
+  "nodes": [
+    {
+      "id": "webhook-calc",
+      "name": "Webhook (From Admin Panel)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "price-calc",
+      "parameters": {
+        "path": "price-calc",
+        "options": {}
+      }
+    },
+    {
+      "id": "code-parse-input",
+      "name": "Parse Calculation Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const input = $input.first().json;\n\n// Accept from webhook body or from DocEditor context\nreturn {\n  material_category: input.material_category || input.category || 'board',\n  material_name: input.material_name || '',\n  sheet_size_label: input.sheet_size_label || input.size || '30 × 21 inch',\n  quantity: parseInt(input.quantity || input.qty || 1),\n  service_category: input.service_category || input.service || 'design',\n  service_label: input.service_label || '',\n  client_name: input.client_name || 'Quote',\n  notes: input.notes || '',\n  timestamp: new Date().toISOString()\n};"
+      }
+    },
+    {
+      "id": "supabase-materials",
+      "name": "Supabase - Get Materials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/pricing_materials?select=*&is_active=eq.true&category=eq.{{ $json.material_category }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "supabase-sizes",
+      "name": "Supabase - Get Sheet Sizes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/pricing_sheet_sizes?select=*&is_active=eq.true",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "supabase-services",
+      "name": "Supabase - Get Service Rates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/pricing_services?select=*&is_active=eq.true",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gemini-calc",
+      "name": "Gemini - Calculate Price",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `You are a printing/packaging pricing calculator. Use the provided pricing data to calculate the cost. Return ONLY valid JSON, no markdown.\n\nRequest: ${$json.quantity} x ${$json.material_name || 'material'} (${$json.material_category}) on ${$json.sheet_size_label}\n\nAvailable Materials: ${JSON.stringify($node['Supabase - Get Materials'].all().map(i => ({name: i.json.name, cost: i.json.cost_per_sheet, gsm: i.json.gsm})))}\n\nAvailable Sizes: ${JSON.stringify($node['Supabase - Get Sheet Sizes'].all().map(i => ({label: i.json.label, area: i.json.area_sqin, multiplier: i.json.multiplier})))}\n\nAvailable Services: ${JSON.stringify($node['Supabase - Get Service Rates'].all().map(i => ({label: i.json.label, category: i.json.category, rate: i.json.base_rate, unit: i.json.unit})))}\n\n{\n  \"selected_material\": \"best matching material name\",\n  \"material_cost_per_unit\": 0,\n  \"selected_size\": \"size label\",\n  \"size_multiplier\": 1,\n  \"total_material_cost\": 0,\n  \"service_cost\": 0,\n  \"total_cost\": 0,\n  \"recommended_selling_price\": 0,\n  \"price_breakdown\": \"Brief explanation\"\n}`}]}]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "code-calc-result",
+      "name": "Parse Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const resp = $input.first().json;\nconst text = resp.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g,'').replace(/```/g,'').trim();\nlet calc;\ntry { calc = JSON.parse(clean); } catch(e) {\n  calc = { total_cost: 0, recommended_selling_price: 0, price_breakdown: 'Calculation error', selected_material: '', material_cost_per_unit: 0, service_cost: 0 };\n}\n\nreturn {\n  ...$json,\n  ...calc,\n  calculated_at: new Date().toISOString()\n};"
+      }
+    },
+    {
+      "id": "return-webhook",
+      "name": "Return to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1280, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "log-calculation",
+      "name": "Supabase - Log Calculation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1280, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/activity_log",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "'price_calculated'" },
+            { "name": "entity_type", "value": "'pricing'" },
+            { "name": "detail", "value": "='Price calc: ' + $json.material_name + ' x' + $json.quantity + ' = LKR ' + $json.total_cost" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (From Admin Panel)": { "main": [[ { "node": "Parse Calculation Request", "type": "main", "index": 0 } ]] },
+    "Parse Calculation Request": {
+      "main": [
+        [{ "node": "Supabase - Get Materials", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Sheet Sizes", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Get Service Rates", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Get Materials": { "main": [[ { "node": "Gemini - Calculate Price", "type": "main", "index": 0 } ]] },
+    "Supabase - Get Sheet Sizes": { "main": [[ { "node": "Gemini - Calculate Price", "type": "main", "index": 0 } ]] },
+    "Supabase - Get Service Rates": { "main": [[ { "node": "Gemini - Calculate Price", "type": "main", "index": 0 } ]] },
+    "Gemini - Calculate Price": { "main": [[ { "node": "Parse Calculation", "type": "main", "index": 0 } ]] },
+    "Parse Calculation": {
+      "main": [
+        [{ "node": "Return to Webhook", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Log Calculation", "type": "main", "index": 0 }]
+      ]
+    },
+    "Return to Webhook": { "main": [[ ]] },
+    "Supabase - Log Calculation": { "main": [[ ]] }
+  },
+  "settings": {
+    "timezone": "Asia/Colombo",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "tags": [{ "name": "Pricing" }, { "name": "Calculator" }, { "name": "AI" }]
+}
