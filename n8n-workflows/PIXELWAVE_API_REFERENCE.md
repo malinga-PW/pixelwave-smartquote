@@ -532,11 +532,26 @@ Notifications: Meta Cloud API v19.0 (WhatsApp), SendGrid Web API (Email)
 }
 ```
 
-### n8n Workflow Webhook Endpoints
+### n8n Workflow Webhook Endpoints (All 10)
 ```
-Webhook 1:  /webhook/client-inquiry    (01-client-inquiry-agent.json)
-Webhook 2:  /webhook/doc-lifecycle     (02-document-lifecycle-agent.json)
+Webhook 01:  /webhook/client-inquiry    (01-client-inquiry-agent.json)
+Webhook 02:  /webhook/doc-lifecycle     (02-document-lifecycle-agent.json)
+Webhook 04:  (none — Schedule trigger, Weekly Mon 9 AM)
+Webhook 05:  (none — Schedule trigger, Every 30 min)
+Webhook 06:  (none — Schedule trigger, Daily 6 AM)
+Webhook 07:  /webhook/kanban-update     (07-kanban-production-notifier.json)
+Webhook 08:  (none — Schedule trigger, Monthly 1st 7 AM)
+Webhook 09:  /webhook/activity-log      (09-activity-logger.json)
+Webhook 10:  /webhook/price-calc        (10-quote-price-calculator.json)
 ```
+
+### Supabase Database Webhooks Required
+Enable Supabase Database Webhooks for these tables to trigger n8n:
+| Workflow | Table | Events | n8n Webhook URL |
+|----------|-------|--------|----------------|
+| 02 | `quotations` | INSERT, UPDATE | `https://your-n8n.domain/webhook/doc-lifecycle` |
+| 07 | `work_orders` | INSERT, UPDATE | `https://your-n8n.domain/webhook/kanban-update` |
+| 09 | ALL tables | INSERT, UPDATE, DELETE | `https://your-n8n.domain/webhook/activity-log` |
 
 ### Gemini API Configuration (for n8n HTTP Request nodes)
 ```
@@ -551,7 +566,10 @@ Body: {
 }
 ```
 
-### Supabase REST API (for n8n HTTP Request nodes)
+### Supabase REST API Endpoints (for n8n HTTP Request nodes)
+
+Used by all 10 workflows. All via HTTP Request nodes with Generic Credential auth.
+
 ```
 Base URL: {{ $credentials.supabaseUrl }}/rest/v1/
 Headers:  apikey: {{ $credentials.supabaseApiKey }}
@@ -559,19 +577,50 @@ Headers:  apikey: {{ $credentials.supabaseApiKey }}
           Content-Type: application/json
           Prefer: return=representation  (for POST returning data)
 
-Common endpoints:
-  GET    /customers?email=eq.{email}&select=id,name,email,phone,address
+═══ CUSTOMERS ═══
+  GET    /customers?select=id,name,email,phone,address&email=eq.{email}
+  GET    /customers?select=id,name,email,phone&not.is.phone=null&limit=100
   POST   /customers?on_conflict=email
   PATCH  /customers?id=eq.{id}
 
-  GET    /quotations?status=eq.Unpaid&select=*,customers!inner(name,email,phone)
-  POST   /quotations
+═══ QUOTATIONS ═══
+  GET    /quotations?select=*,customers!inner(name,email,phone)&status=eq.Unpaid&order=created_at.asc
+  GET    /quotations?select=*,customers!inner(name,email,phone,address),quotation_items(*)
+  POST   /quotations                                        (Prefer: return=representation)
   PATCH  /quotations?quote_no=eq.{quote_no}
+  PATCH  /quotations?id=eq.{id}                             (for UUID-based update)
 
+═══ QUOTATION ITEMS ═══
   POST   /quotation_items
   DELETE /quotation_items?quotation_id=eq.{id}
 
+═══ WORK ORDERS ═══
   POST   /work_orders
+
+═══ SUBSCRIPTIONS ═══
+  GET    /subscriptions?select=*,customers!inner(name,email,phone,address)&status=eq.Active&order=renewal_date.asc
+
+═══ SUPPLIERS ═══
+  GET    /suppliers?select=id,name,contact,category,notes,is_active&is_active=eq.true
+
+═══ SUPPLIER PURCHASES ═══
+  GET    /supplier_purchases?select=*,suppliers(name)&order=purchase_date.desc&limit=100
+
+═══ PRICING ═══
+  GET    /pricing_materials?select=*&is_active=eq.true&category=eq.{category}
+  GET    /pricing_sheet_sizes?select=*&is_active=eq.true
+  GET    /pricing_services?select=*&is_active=eq.true
+
+═══ P&L ═══
+  GET    /pnl_expenses?select=*&expense_month=eq.{m}&expense_year=eq.{y}
+  GET    /pnl_revenues?select=*&revenue_month=eq.{m}&revenue_year=eq.{y}
+
+═══ MARKETING ═══
+  GET    /marketing_campaigns?status=eq.draft&select=*&order=created_at.asc
+  PATCH  /marketing_campaigns?id=eq.{id}
+
+═══ ACTIVITY LOG ═══
+  POST   /activity_log
 ```
 
 ### Quote Number Format
@@ -659,15 +708,15 @@ NEXT_PUBLIC_SUPABASE_URL=http://supabasekong-uh7w2lgy5fmp5c7c5rjprb3c.46.202.164
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ```
 
-### n8n Credentials Required
-| Credential Name | Type | Source |
-|----------------|------|--------|
-| `geminiApiKey` | API Key | Google AI Studio |
-| `supabaseCredentials` | Generic Credential (Header/Query) | Supabase Project Settings → API |
-| `redis` | Redis Basic | Coolify Redis service |
-| `rabbitmq` | RabbitMQ | Coolify RabbitMQ service |
-| `smtp` | SMTP | Hostinger email |
-| `whatsappCredentials` | Generic Credential | Meta Developer Console |
+### n8n Credentials Required (for all 10 workflows)
+| Credential Name | Type | Used By Workflows | Source |
+|----------------|------|-------------------|--------|
+| `geminiApiKey` | API Key | 01, 02, 03, 04, 05, 07, 08, 10 | Google AI Studio |
+| `supabaseCredentials` | Generic Credential (Header/Query) | ALL (01-10) | Supabase Project Settings → API (`service_role` key) |
+| `redis` | Redis Basic | 03 (rate limiting) | Coolify Redis service |
+| `rabbitmq` | RabbitMQ | 01, 02 (async queues) | Coolify RabbitMQ service |
+| `smtp` | SMTP | 01, 02, 03, 04, 05, 06, 07, 08 | Hostinger email |
+| `whatsappCredentials` | Generic Credential | 03, 05 (WhatsApp sends) | Meta Developer Console |
 
 ---
 
@@ -710,15 +759,30 @@ Invoice:   Draft → Sent → Paid
 
 ---
 
-## 11. N8n WORKFLOW FILE REFERENCE
+## 11. N8n WORKFLOW FILE REFERENCE (All 10)
 
 Files in `n8n-workflows/`:
 
-| File | Purpose | Trigger | Key Nodes |
-|------|---------|---------|-----------|
-| `01-client-inquiry-agent.json` | Auto-parse WhatsApp/Email → Create Quote | Webhook | Gemini, Supabase REST, Email, RabbitMQ |
-| `02-document-lifecycle-agent.json` | Auto-convert on status change | Webhook | Switch, Gemini, Supabase REST, Email, RabbitMQ |
-| `03-payment-followup-agent.json` | Daily unpaid reminder | Schedule (8AM) | Supabase REST, Gemini, Redis, Email, WhatsApp |
+| # | File | Purpose | Trigger | Supabase Tables Used | Credentials |
+|---|------|---------|---------|---------------------|-------------|
+| 01 | `01-client-inquiry-agent.json` | Auto-parse WhatsApp/Email → Create Quote | Webhook `/webhook/client-inquiry` | customers, quotations, quotation_items, activity_log | Gemini, Supabase, Email, RabbitMQ, WhatsApp |
+| 02 | `02-document-lifecycle-agent.json` | Auto-convert Approved/Signed/Paid | Webhook `/webhook/doc-lifecycle` | quotations, customers, activity_log | Gemini, Supabase, Email, RabbitMQ |
+| 03 | `03-payment-followup-agent.json` | Daily unpaid AI reminder | Schedule **Daily 8AM** | quotations, customers | Gemini, Supabase, Redis, Email, WhatsApp |
+| 04 | `04-supplier-auto-reorder.json` | Weekly supplier inactivity alert | Schedule **Weekly Mon 9AM** | suppliers, supplier_purchases, activity_log | Gemini, Supabase, Email |
+| 05 | `05-campaign-dispatch-agent.json` | Dispatch marketing campaigns | Schedule **Every 30min** | marketing_campaigns, customers, activity_log | Gemini, Supabase, Email, WhatsApp |
+| 06 | `06-subscription-billing-agent.json` | Auto invoice on renewal (3 days before) | Schedule **Daily 6AM** | subscriptions, customers, quotations, quotation_items, activity_log | Supabase, Email |
+| 07 | `07-kanban-production-notifier.json` | Team alert on kanban column move | Webhook `/webhook/kanban-update` | work_orders, activity_log | Gemini, Supabase, Email |
+| 08 | `08-monthly-pnl-reporter.json` | Monthly P&L report with AI summary | Schedule **Monthly 1st 7AM** | pnl_expenses, pnl_revenues, activity_log | Gemini, Supabase, Email |
+| 09 | `09-activity-logger.json` | Central audit log for all DB changes | Webhook `/webhook/activity-log` | ALL tables → activity_log | Supabase |
+| 10 | `10-quote-price-calculator.json` | AI price calculator from pricing DB | Webhook `/webhook/price-calc` | pricing_materials, pricing_sheet_sizes, pricing_services, activity_log | Gemini, Supabase |
+
+### Trigger Type Summary
+- **Schedule (Daily):** Workflows 03 (8AM), 06 (6AM)
+- **Schedule (Weekly):** Workflow 04 (Monday 9AM)
+- **Schedule (Monthly):** Workflow 08 (1st 7AM)
+- **Schedule (Interval):** Workflow 05 (every 30 min)
+- **Webhook (n8n):** Workflows 01, 10
+- **Webhook (Supabase DB Webhook → n8n):** Workflows 02, 07, 09
 
 ---
 
@@ -823,10 +887,18 @@ pixelwave-smartquote/
 ├── data/
 │   └── mockDatabase.js             # Seed data + AI presets
 ├── n8n-workflows/
+│   ├── README.md                       # Setup guide + AI assistant instructions
+│   ├── PIXELWAVE_API_REFERENCE.md      # ← This file
 │   ├── 01-client-inquiry-agent.json
 │   ├── 02-document-lifecycle-agent.json
 │   ├── 03-payment-followup-agent.json
-│   └── README.md
+│   ├── 04-supplier-auto-reorder.json
+│   ├── 05-campaign-dispatch-agent.json
+│   ├── 06-subscription-billing-agent.json
+│   ├── 07-kanban-production-notifier.json
+│   ├── 08-monthly-pnl-reporter.json
+│   ├── 09-activity-logger.json
+│   └── 10-quote-price-calculator.json
 ├── public/
 ├── schema.sql                      # Full DB schema
 ├── test_supabase.mjs               # Connection test script
@@ -837,8 +909,9 @@ pixelwave-smartquote/
 ---
 
 > **Next Steps:** Use this reference with Gemini Pro / Claude Code to:
-> 1. Import these 3 n8n workflow JSONs from `n8n-workflows/`
+> 1. Import all 10 n8n workflow JSONs from `n8n-workflows/`
 > 2. Connect credentials (Supabase REST, Gemini API, Redis, RabbitMQ, SMTP, WhatsApp)
 > 3. Test webhooks from the admin panel (DocEditor AI Intake → n8n → Supabase)
-> 4. Enable Supabase Database Webhooks (for `02-document-lifecycle-agent.json`)
-> 5. Schedule `03-payment-followup-agent.json` at 8 AM daily
+> 4. Enable Supabase Database Webhooks for tables: `quotations`, `work_orders`, and ALL others (for workflows 02, 07, 09)
+> 5. Schedule triggers: 03 (Daily 8AM), 04 (Weekly Mon 9AM), 05 (Every 30min), 06 (Daily 6AM), 08 (Monthly 1st 7AM)
+> 6. Wire workflow 10 (`/webhook/price-calc`) into DocEditor/PricingMatrix for live price calculation
