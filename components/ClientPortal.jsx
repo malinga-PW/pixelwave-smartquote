@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   CheckCircle, FileDown, ShieldCheck, Sparkles, 
   Signature, CreditCard, RefreshCw, X, ArrowUpRight,
-  Download, FileImage
+  Download, FileImage, Image
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export default function ClientPortal({ activeDocument, onUpdateStatus }) {
   const [signatureType, setSignatureType] = useState('draw');
@@ -33,25 +34,52 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleDownloadPDF = (e) => {
+  const captureCard = async () => {
+    const el = document.querySelector('.print-card');
+    if (!el) return null;
+    return await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+  };
+
+  const handleDownloadPDF = async (e) => {
     e.stopPropagation();
     setShowDownloadMenu(false);
-    window.print();
+    const canvas = await captureCard();
+    if (!canvas) return;
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save((activeDocument?.quote_no || 'document') + '.pdf');
   };
 
   const handleDownloadJPEG = async (e) => {
     e.stopPropagation();
     setShowDownloadMenu(false);
     try {
-      const el = document.querySelector('.print-card');
-      if (!el) return;
-      const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+      const canvas = await captureCard();
+      if (!canvas) return;
       const link = document.createElement('a');
       link.download = (activeDocument?.quote_no || 'document') + '.jpeg';
       link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
     } catch (err) {
       console.error('JPEG download failed:', err);
+    }
+  };
+
+  const handleDownloadPNG = async (e) => {
+    e.stopPropagation();
+    setShowDownloadMenu(false);
+    try {
+      const canvas = await captureCard();
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = (activeDocument?.quote_no || 'document') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('PNG download failed:', err);
     }
   };
 
@@ -259,7 +287,14 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
                 >
                   <FileImage className="w-3.5 h-3.5" />
-                  <span>Download JPEG</span>
+                  <span>JPEG</span>
+                </button>
+                <button
+                  onClick={handleDownloadPNG}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+                >
+                  <Image className="w-3.5 h-3.5" />
+                  <span>PNG</span>
                 </button>
               </div>
             )}

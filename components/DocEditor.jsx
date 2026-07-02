@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, Plus, Trash2, Save, FileSpreadsheet, 
   RefreshCcw, ArrowRight, Printer, AlertTriangle, CheckCircle2, 
-  Download, Globe, Image
+  Download, Globe, Image, FileImage
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { mockAIIntakePresets } from '../data/mockDatabase';
 
 export default function DocEditor({ 
@@ -41,25 +42,52 @@ export default function DocEditor({
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleDownloadPDF = (e) => {
+  const captureForm = async () => {
+    const el = document.querySelector('#doc-editor-form');
+    if (!el) return null;
+    return await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+  };
+
+  const handleDownloadPDF = async (e) => {
     e.stopPropagation();
     setShowDownloadMenu(false);
-    window.print();
+    const canvas = await captureForm();
+    if (!canvas) return;
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save((quoteNo || 'document') + '.pdf');
   };
 
   const handleDownloadJPEG = async (e) => {
     e.stopPropagation();
     setShowDownloadMenu(false);
     try {
-      const el = document.querySelector('#doc-editor-form');
-      if (!el) return;
-      const canvas = await html2canvas(el, { backgroundColor: '#ffffff', scale: 2 });
+      const canvas = await captureForm();
+      if (!canvas) return;
       const link = document.createElement('a');
       link.download = (quoteNo || 'document') + '.jpeg';
       link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
     } catch (err) {
       console.error('JPEG download failed:', err);
+    }
+  };
+
+  const handleDownloadPNG = async (e) => {
+    e.stopPropagation();
+    setShowDownloadMenu(false);
+    try {
+      const canvas = await captureForm();
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = (quoteNo || 'document') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('PNG download failed:', err);
     }
   };
 
@@ -434,7 +462,14 @@ export default function DocEditor({
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] text-slate-200 hover:bg-slate-800 font-semibold transition-all"
                     >
                       <Image className="w-3.5 h-3.5" />
-                      <span>JPEG Image</span>
+                      <span>JPEG</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadPNG}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] text-slate-200 hover:bg-slate-800 font-semibold transition-all"
+                    >
+                      <FileImage className="w-3.5 h-3.5" />
+                      <span>PNG</span>
                     </button>
                   </div>
                 )}
