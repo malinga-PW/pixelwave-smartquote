@@ -124,7 +124,7 @@
       "typeVersion": 1,
       "position": [1500, 200],
       "parameters": {
-        "fromEmail": "finance@pixelwave.lk",
+        "fromEmail": "billing@pixelwave.lk",
         "toEmail": "admin@pixelwave.lk",
         "subject": "=Monthly P&L Report - {{ $json.month_name }}",
         "text": "={{ 'P&L SUMMARY - ' + $json.month_name + '\\n\\n' +\n'Revenue: LKR ' + $json.total_revenues.toLocaleString() + '\\n' +\n'Expenses: LKR ' + $json.total_expenses.toLocaleString() + '\\n' +\n'Net Profit: LKR ' + $json.net_profit.toLocaleString() + '\\n' +\n'Margin: ' + $json.profit_margin_pct + '%\\n\\n' +\n'EXECUTIVE SUMMARY:\\n' + $json.executive_summary + '\\n\\n' +\n'KEY INSIGHT:\\n' + $json.key_insight + '\\n\\n' +\n'RECOMMENDATION:\\n' + $json.recommendation }}",

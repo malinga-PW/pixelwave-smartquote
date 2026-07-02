@@ -130,7 +130,7 @@
       "typeVersion": 1,
       "position": [1640, 120],
       "parameters": {
-        "fromEmail": "procurement@pixelwave.lk",
+        "fromEmail": "billing@pixelwave.lk",
         "toEmail": "operations@pixelwave.lk",
         "subject": "={{ $json.alert_title + ' - ' + $json.supplier_name }}",
         "text": "={{ $json.message + '\\n\\nSupplier: ' + $json.supplier_name + '\\nContact: ' + $json.contact + '\\nLast Order: ' + $json.last_order_date }}",

@@ -84,7 +84,7 @@
           "parameters": [
             {
               "name": "contents",
-              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Document Lifecycle Manager. A Quote was just APPROVED. Decide the next step. Return ONLY valid JSON, no markdown.\n\nCurrent: {{ $json.quote_no }}\n\n{\n  \"action\": \"convert_to_proforma\",\n  \"new_type\": \"Proforma\",\n  \"new_status\": \"Unpaid\",\n  \"notes\": \"Auto-converted from approved Quote\"\n}`}]}]"
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Document Lifecycle Manager. Current doc {{ $json.quote_no }} has status \"{{ $json.status }}\".\\nRules:\\n- Approved -> convert_to_proforma (new: Proforma/Unpaid)\\n- Signed -> convert_to_work_order (new: Work Order/Pending)\\n- Paid -> mark_as_paid (new: keep same/Paid)\\nReturn ONLY valid JSON, no markdown.\\n\\n{ \"action\": \"...\", \"new_type\": \"...\", \"new_status\": \"...\", \"notes\": \"Auto-converted\" }`}]}]"
             }
           ]
         },
@@ -223,6 +223,23 @@
       }
     },
     {
+      "id": "switch-route-action",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1500, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action }}",
+        "rules": [
+          { "value2": "convert_to_proforma", "output": 0 },
+          { "value2": "convert_to_work_order", "output": 1 },
+          { "value2": "mark_as_paid", "output": 2 }
+        ],
+        "fallbackOutput": 3
+      }
+    },
+    {
       "id": "noop-fallback",
       "name": "No Action",
       "type": "n8n-nodes-base.noOp",
@@ -243,14 +260,20 @@
       ]
     },
     "Supabase - Get Customer": {
-      "main": [
-        [{ "node": "Gemini - Decide Next Action", "type": "main", "index": 0 }],
-        [{ "node": "Supabase - Create Work Order", "type": "main", "index": 0 }],
-        [{ "node": "Supabase - Mark as Paid", "type": "main", "index": 0 }]
-      ]
+      "main": [[
+        { "node": "Gemini - Decide Next Action", "type": "main", "index": 0 }
+      ]]
     },
     "Gemini - Decide Next Action": { "main": [[ { "node": "Parse Gemini Decision", "type": "main", "index": 0 } ]] },
-    "Parse Gemini Decision": { "main": [[ { "node": "Supabase - Create Proforma", "type": "main", "index": 0 } ]] },
+    "Parse Gemini Decision": { "main": [[ { "node": "Route by Action", "type": "main", "index": 0 } ]] },
+    "Route by Action": {
+      "main": [
+        [{ "node": "Supabase - Create Proforma", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Create Work Order", "type": "main", "index": 0 }],
+        [{ "node": "Supabase - Mark as Paid", "type": "main", "index": 0 }],
+        [{ "node": "No Action", "type": "main", "index": 0 }]
+      ]
+    },
     "Supabase - Create Proforma": { "main": [[ { "node": "Email Client", "type": "main", "index": 0 } ]] },
     "Supabase - Create Work Order": { "main": [[ { "node": "Queue Production Order", "type": "main", "index": 0 } ]] },
     "Queue Production Order": { "main": [[ { "node": "Email Client", "type": "main", "index": 0 } ]] },

@@ -12,10 +12,7 @@
       "name": "WhatsApp Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [
-        528,
-        -704
-      ],
+      "position": [528, -704],
       "webhookId": "client-inquiry"
     },
     {
@@ -27,10 +24,7 @@
       "name": "Parse & Format Inquiry",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        736,
-        -704
-      ]
+      "position": [736, -704]
     },
     {
       "parameters": {
@@ -40,31 +34,20 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "x-goog-api-key",
-              "value": "={{ $credentials.geminiApiKey }}"
-            }
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ $json.gemini_payload }}",
-        "options": {
-          "timeout": 30000
-        }
+        "options": { "timeout": 30000 }
       },
       "id": "e6ae5b16-de1f-4340-9861-8f246b6cc5f3",
       "name": "Gemini - Extract Quote Details",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        960,
-        -704
-      ]
+      "position": [960, -704]
     },
     {
       "parameters": {
@@ -75,10 +58,7 @@
       "name": "Parse Gemini Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1184,
-        -704
-      ]
+      "position": [1184, -704]
     },
     {
       "parameters": {
@@ -88,28 +68,17 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $credentials.supabaseApiKey }}"
-            }
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
           ]
         },
-        "options": {
-          "timeout": 10000
-        }
+        "options": { "timeout": 10000 }
       },
       "id": "eb73863d-dc09-4f25-b82d-ca891af9d8e2",
       "name": "Supabase - Find Customer",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1392,
-        -704
-      ]
+      "position": [1392, -704]
     },
     {
       "parameters": {
@@ -119,43 +88,19 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "resolution=merge-failed"
-            }
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-failed" }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            {
-              "name": "name",
-              "value": "={{ $json.customer_name }}"
-            },
-            {
-              "name": "email",
-              "value": "={{ $json.customer_email }}"
-            },
-            {
-              "name": "phone",
-              "value": "={{ $json.customer_phone }}"
-            },
-            {
-              "name": "address",
-              "value": "={{ $json.customer_address }}"
-            }
+            { "name": "name", "value": "={{ $json.customer_name }}" },
+            { "name": "email", "value": "={{ $json.customer_email }}" },
+            { "name": "phone", "value": "={{ $json.customer_phone }}" },
+            { "name": "address", "value": "={{ $json.customer_address }}" }
           ]
         },
         "options": {}
@@ -164,10 +109,7 @@
       "name": "Supabase - Upsert Customer",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1600,
-        -704
-      ]
+      "position": [1600, -704]
     },
     {
       "parameters": {
@@ -177,59 +119,23 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            {
-              "name": "quote_no",
-              "value": "={{ $json.quote_no }}"
-            },
-            {
-              "name": "customer_id",
-              "value": "={{ $node['Supabase - Upsert Customer'].json[0]?.id || $node['Supabase - Find Customer'].json[0]?.id }}"
-            },
-            {
-              "name": "issue_date",
-              "value": "={{ $json.issue_date }}"
-            },
-            {
-              "name": "type",
-              "value": "={{ $json.type }}"
-            },
-            {
-              "name": "status",
-              "value": "={{ $json.status }}"
-            },
-            {
-              "name": "subtotal",
-              "value": "={{ $json.subtotal }}"
-            },
-            {
-              "name": "grand_total",
-              "value": "={{ $json.grand_total }}"
-            },
-            {
-              "name": "notes",
-              "value": "={{ $json.notes }}"
-            }
+            { "name": "quote_no", "value": "={{ $json.quote_no }}" },
+            { "name": "customer_id", "value": "={{ $node['Supabase - Upsert Customer'].json[0]?.id || $node['Supabase - Find Customer'].json[0]?.id }}" },
+            { "name": "issue_date", "value": "={{ $json.issue_date }}" },
+            { "name": "type", "value": "={{ $json.type }}" },
+            { "name": "status", "value": "={{ $json.status }}" },
+            { "name": "subtotal", "value": "={{ $json.subtotal }}" },
+            { "name": "grand_total", "value": "={{ $json.grand_total }}" },
+            { "name": "notes", "value": "={{ $json.notes }}" }
           ]
         },
         "options": {}
@@ -238,10 +144,7 @@
       "name": "Supabase - Create Quotation",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1824,
-        -704
-      ]
+      "position": [1824, -704]
     },
     {
       "parameters": {
@@ -251,18 +154,9 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $credentials.supabaseApiKey }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
@@ -274,10 +168,7 @@
       "name": "Supabase - Create Items",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        2032,
-        -512
-      ]
+      "position": [2032, -512]
     },
     {
       "parameters": {
@@ -291,10 +182,10 @@
       "name": "Send Email Confirmation",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 1,
-      "position": [
-        2160,
-        -704
-      ]
+      "position": [2160, -704],
+      "credentials": {
+        "smtp": { "id": "kNPRrkpEaeqSxFHh", "name": "SMTP account 2" }
+      }
     },
     {
       "parameters": {
@@ -305,10 +196,10 @@
       "name": "Queue for Review (RabbitMQ)",
       "type": "n8n-nodes-base.rabbitmq",
       "typeVersion": 1,
-      "position": [
-        2256,
-        -512
-      ]
+      "position": [2256, -512],
+      "credentials": {
+        "rabbitmq": { "id": "DbKgCmcaMN0m1kt5", "name": "RabbitMQ account" }
+      }
     },
     {
       "parameters": {},
@@ -316,152 +207,42 @@
       "name": "Complete",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [
-        2448,
-        -704
-      ]
+      "position": [2448, -704]
     }
   ],
   "pinData": {},
   "connections": {
-    "WhatsApp Webhook": {
-      "main": [
-        [
-          {
-            "node": "Parse & Format Inquiry",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse & Format Inquiry": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Extract Quote Details",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Extract Quote Details": {
-      "main": [
-        [
-          {
-            "node": "Parse Gemini Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse Gemini Response": {
-      "main": [
-        [
-          {
-            "node": "Supabase - Find Customer",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Supabase - Find Customer": {
-      "main": [
-        [
-          {
-            "node": "Supabase - Upsert Customer",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Supabase - Upsert Customer": {
-      "main": [
-        [
-          {
-            "node": "Supabase - Create Quotation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
+    "WhatsApp Webhook": { "main": [[ { "node": "Parse & Format Inquiry", "type": "main", "index": 0 } ]] },
+    "Parse & Format Inquiry": { "main": [[ { "node": "Gemini - Extract Quote Details", "type": "main", "index": 0 } ]] },
+    "Gemini - Extract Quote Details": { "main": [[ { "node": "Parse Gemini Response", "type": "main", "index": 0 } ]] },
+    "Parse Gemini Response": { "main": [[ { "node": "Supabase - Find Customer", "type": "main", "index": 0 } ]] },
+    "Supabase - Find Customer": { "main": [[ { "node": "Supabase - Upsert Customer", "type": "main", "index": 0 } ]] },
+    "Supabase - Upsert Customer": { "main": [[ { "node": "Supabase - Create Quotation", "type": "main", "index": 0 } ]] },
     "Supabase - Create Quotation": {
-      "main": [
-        [
-          {
-            "node": "Send Email Confirmation",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Supabase - Create Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[
+        { "node": "Send Email Confirmation", "type": "main", "index": 0 },
+        { "node": "Supabase - Create Items", "type": "main", "index": 0 }
+      ]]
     },
-    "Supabase - Create Items": {
-      "main": [
-        [
-          {
-            "node": "Queue for Review (RabbitMQ)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Email Confirmation": {
-      "main": [
-        [
-          {
-            "node": "Complete",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Queue for Review (RabbitMQ)": {
-      "main": [
-        [
-          {
-            "node": "Complete",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Supabase - Create Items": { "main": [[ { "node": "Queue for Review (RabbitMQ)", "type": "main", "index": 0 } ]] },
+    "Send Email Confirmation": { "main": [[ { "node": "Complete", "type": "main", "index": 0 } ]] },
+    "Queue for Review (RabbitMQ)": { "main": [[ { "node": "Complete", "type": "main", "index": 0 } ]] }
   },
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
+  "versionId": "6405dea2-ed39-45f3-84e3-16c866b9f6fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6adb643dd7d273b3a3c36a8c88a219f6c6362a719fc19640e0a85fd38028bd01"
+  },
+  "nodeGroups": [],
+  "id": "wD22FsrI5XYOjIBv",
   "tags": [
-    {
-      "updatedAt": "2026-07-01T05:02:25.487Z",
-      "createdAt": "2026-07-01T05:02:25.487Z",
-      "id": "IpPB6dPB636yalG0",
-      "name": "AI Agent"
-    },
-    {
-      "updatedAt": "2026-07-01T05:02:26.164Z",
-      "createdAt": "2026-07-01T05:02:26.164Z",
-      "id": "ld8RBU0L2fonYzMW",
-      "name": "Quotation"
-    },
-    {
-      "updatedAt": "2026-07-01T05:02:25.539Z",
-      "createdAt": "2026-07-01T05:02:25.539Z",
-      "id": "NfREv0ZJKg9tlvk7",
-      "name": "WhatsApp"
-    }
+    { "updatedAt": "2026-07-01T05:02:25.487Z", "createdAt": "2026-07-01T05:02:25.487Z", "id": "IpPB6dPB636yalG0", "name": "AI Agent" },
+    { "updatedAt": "2026-07-01T05:02:26.164Z", "createdAt": "2026-07-01T05:02:26.164Z", "id": "ld8RBU0L2fonYzMW", "name": "Quotation" },
+    { "updatedAt": "2026-07-01T05:02:25.539Z", "createdAt": "2026-07-01T05:02:25.539Z", "id": "NfREv0ZJKg9tlvk7", "name": "WhatsApp" }
   ]
 }

@@ -1,0 +1,180 @@
+{
+  "name": "02 - Document Lifecycle AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "doc-lifecycle",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "ded4c5dc-0b2a-4891-9c30-a545592a99c6",
+      "name": "Supabase Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        -320
+      ],
+      "webhookId": "doc-lifecycle"
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $input.first().json;\nconst record = event.record || event.new || {};\nconst oldRecord = event.old || {};\n\nreturn {\n  quote_no: record.quote_no,\n  type: record.type,\n  status: record.status,\n  old_status: oldRecord.status,\n  customer_id: record.customer_id,\n  event_type: event.type || 'UPDATE',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "e2a755c1-0b52-4962-90f6-7972b11f8b48",
+      "name": "Parse Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1920,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "Approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "44e9008c-5dcc-45ab-9036-88b689611dc4"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ea7b9822-dcc0-4914-90a1-d4bed26f174e",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "Signed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4a7a1cc5-e191-4370-a4f0-41690d8a5bea",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "Paid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1712,
+        -320
+      ],
+      "id": "0cdb9ba6-3cba-4f03-b7e8-d2903699dbbf",
+      "name": "Route by New Status"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Supabase Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Event": {
+      "main": [
+        [
+          {
+            "node": "Route by New Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5cdafa71-ec13-412e-9ea4-1367ff4a5f42",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6adb643dd7d273b3a3c36a8c88a219f6c6362a719fc19640e0a85fd38028bd01"
+  },
+  "nodeGroups": [],
+  "id": "FnDDusZWKMFqDB7M",
+  "tags": [
+    {
+      "updatedAt": "2026-07-01T05:02:25.487Z",
+      "createdAt": "2026-07-01T05:02:25.487Z",
+      "id": "IpPB6dPB636yalG0",
+      "name": "AI Agent"
+    },
+    {
+      "updatedAt": "2026-07-01T05:03:48.292Z",
+      "createdAt": "2026-07-01T05:03:48.292Z",
+      "id": "nxtnHjSW84qzyYtx",
+      "name": "Lifecycle"
+    },
+    {
+      "updatedAt": "2026-07-01T05:03:48.274Z",
+      "createdAt": "2026-07-01T05:03:48.274Z",
+      "id": "XEIfSbs0rdb4K5nt",
+      "name": "Automation"
+    }
+  ]
+}

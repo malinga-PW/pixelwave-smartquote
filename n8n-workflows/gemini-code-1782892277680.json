@@ -1,0 +1,113 @@
+{
+  "name": "02 - Document Lifecycle AI Agent",
+  "nodes": [
+    {
+      "id": "webhook-doc-update",
+      "name": "Supabase Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "doc-lifecycle",
+      "parameters": {
+        "path": "doc-lifecycle",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "code-parse-event",
+      "name": "Parse Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const event = $input.first().json;\nconst record = event.record || event.new || {};\nconst oldRecord = event.old || {};\n\nreturn {\n  quote_no: record.quote_no,\n  type: record.type,\n  status: record.status,\n  old_status: oldRecord.status,\n  customer_id: record.customer_id,\n  event_type: event.type || 'UPDATE',\n  timestamp: new Date().toISOString()\n};"
+      }
+    },
+    {
+      "id": "switch-status",
+      "name": "Route by New Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.status }}",
+        "rules": {
+          "rules": [
+            { "value2": "Approved" },
+            { "value2": "Signed" },
+            { "value2": "Paid" }
+          ]
+        },
+        "fallbackOutput": 3
+      }
+    },
+    {
+      "id": "supabase-get-customer",
+      "name": "Supabase - Get Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 150],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $credentials.supabaseUrl }}/rest/v1/customers?id=eq.{{ $json.customer_id }}&select=name,email,phone",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $credentials.supabaseApiKey }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.supabaseApiKey }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gemini-convert",
+      "name": "Gemini - Decide Next Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 150],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}"}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": `Document Lifecycle Manager. Current doc {{ $json.quote_no }} has status \"{{ $json.status }}\".\\nRules:\\n- Approved -> convert_to_proforma (new: Proforma/Unpaid)\\n- Signed -> convert_to_work_order (new: Work Order/Pending)\\n- Paid -> mark_as_paid (new: keep same/Paid)\\nReturn ONLY valid JSON, no markdown.\\n\\n{ \"action\": \"...\", \"new_type\": \"...\", \"new_status\": \"...\", \"notes\": \"Auto-converted\" }`}]}]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "code-gemini-parse",
+      "name": "Parse Gemini Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 150],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
+
+### 💡 ඊළඟට කරන්න ඕනේ දේ:
+1. ඉහත කේතය සම්පූර්ණයෙන්ම **Copy** කරගන්න.
+2. ඔයාගේ n8n හි හිස් canvas එකක් ඇරලා කෙලින්ම **Ctrl + V (Paste)** කරන්න.
+3. දැන් සියලුම Nodes එකිනෙකට කිසිදු බිඳීමකින් තොරව නිවැරදිව සම්බන්ධ වී ඇති අයුරු දැකගත හැකි වේවි. 
+4. මතක ඇතුව `supabaseCredentials` සහ `geminiApiKey` නිවැරදිව Node එකට ලබා දී ඇති දැයි පරීක්ෂා කර සක්‍රිය (Activate) කරන්න.

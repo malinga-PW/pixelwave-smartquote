@@ -1,0 +1,52 @@
+{
+  "name": "01-client-inquiry-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client-inquiry",
+        "options": {}
+      },
+      "name": "Client Inquiry Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 0],
+      "typeVersion": 1,
+      "webhookId": "pixelwave-client-inquiry-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $credentials.geminiApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{ \"role\": \"user\", \"parts\": [{ \"text\": \"You are the PixelWave AI Agent. Parse this client inquiry and return ONLY valid JSON with no markdown formatting. Extract customer name, email, phone, and requested items (title, description, qty, unit_price). Inquiry: \\n\" + $json.body.message }] }]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Gemini AI Parser",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [200, 0],
+      "typeVersion": 4.1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean Gemini JSON Response\nconst rawText = $input.item.json.candidates[0].content.parts[0].text;\nconst cleanedText = rawText.replace(/
+http://googleusercontent.com/immersive_entry_chip/0

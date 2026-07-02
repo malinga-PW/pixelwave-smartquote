@@ -3,40 +3,41 @@
   "nodes": [
     {
       "parameters": {
+        "httpMethod": "POST",
         "path": "client-inquiry",
         "options": {
           "rawBody": true
         }
       },
-      "id": "9b83cc70-3480-4152-af1b-9928a93d8673",
+      "id": "bb9e8a6a-3043-4d19-ac71-8b4f87872986",
       "name": "WhatsApp Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        528,
-        -704
+        192,
+        -384
       ],
       "webhookId": "client-inquiry"
     },
     {
       "parameters": {
-        "language": "javascript",
-        "code": "const input = $input.first().json;\n\nconst rawMessage = input.body || input.message || input.text || input.content || '';\nconst senderName = input.sender_name || input.name || input.from || 'Unknown';\nconst senderContact = input.sender_contact || input.phone || input.email || '';\nconst channel = input.channel || input.source || 'whatsapp';\n\n// Generate quote number: PW-YYYYMMDD-XXXX\nconst now = new Date();\nconst dateStr = now.getFullYear()\n  + String(now.getMonth() + 1).padStart(2, '0')\n  + String(now.getDate()).padStart(2, '0');\nconst rand = String(Math.floor(Math.random() * 9000) + 1000);\nconst quoteNo = 'PW-' + dateStr + '-' + rand;\n\nconst promptText = `You are a smart quoting assistant for a printing/packaging company. Extract quotation details from this client inquiry. Return ONLY valid JSON with NO markdown formatting or code blocks.\n\n{\n  \"customer_name\": \"full name\",\n  \"customer_email\": \"email if found\",\n  \"customer_phone\": \"phone number\",\n  \"customer_address\": \"address if found\",\n  \"items\": [{\"item_title\": \"service name\", \"description\": \"details\", \"qty\": 1, \"unit_price\": 0}],\n  \"notes\": \"any special requests\",\n  \"type\": \"Quote\"\n}\n\nIf any field is missing, use \"\" or [] or 0. Do NOT guess prices.\n\nInquiry: ${rawMessage}\nFrom: ${senderName} (${senderContact})`;\n\nreturn [{\n  raw_message: rawMessage,\n  sender_name: senderName,\n  sender_contact: senderContact,\n  channel: channel,\n  quote_no: quoteNo,\n  issue_date: now.toISOString().slice(0, 10),\n  type: 'Quote',\n  status: 'Draft',\n  gemini_payload: {\n    contents: [{ role: 'user', parts: [{ text: promptText }] }]\n  }\n}];"
+        "jsCode": "const input = $input.first().json;\n\nconst rawMessage = input.body || input.message || input.text || input.content || '';\nconst senderName = input.sender_name || input.name || input.from || 'Unknown';\nconst senderContact = input.sender_contact || input.phone || input.email || '';\nconst channel = input.channel || input.source || 'whatsapp';\n\nconst now = new Date();\nconst dateStr = now.getFullYear()\n  + String(now.getMonth() + 1).padStart(2, '0')\n  + String(now.getDate()).padStart(2, '0');\nconst rand = String(Math.floor(Math.random() * 9000) + 1000);\nconst quoteNo = 'PW-' + dateStr + '-' + rand;\n\nconst promptText = `You are a smart quoting assistant for a printing/packaging company. Extract quotation details from this client inquiry. Return ONLY valid JSON with NO markdown formatting or code blocks.\n\n{\n  \"customer_name\": \"full name\",\n  \"customer_email\": \"email if found\",\n  \"customer_phone\": \"phone number\",\n  \"customer_address\": \"address if found\",\n  \"items\": [{\"item_title\": \"service name\", \"description\": \"details\", \"qty\": 1, \"unit_price\": 0}],\n  \"notes\": \"any special requests\",\n  \"type\": \"Quote\"\n}\n\nIf any field is missing, use \"\" or [] or 0. Do NOT guess prices.\n\nInquiry: ${rawMessage}\nFrom: ${senderName} (${senderContact})`;\n\nreturn [{\n  raw_message: rawMessage,\n  sender_name: senderName,\n  sender_contact: senderContact,\n  channel: channel,\n  quote_no: quoteNo,\n  issue_date: now.toISOString().slice(0, 10),\n  type: 'Quote',\n  status: 'Draft',\n  gemini_payload: {\n    contents: [{ role: 'user', parts: [{ text: promptText }] }]\n  }\n}];"
       },
-      "id": "8d96fa1c-647c-4560-abb0-19fa87c83223",
-      "name": "Parse & Format Inquiry",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        736,
-        -704
-      ]
+        400,
+        -384
+      ],
+      "id": "9d186e1c-fc32-4b01-a3f4-f60261c7ce6f",
+      "name": "Parse & Format Inquiry"
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -53,38 +54,45 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ $json.gemini_payload }}",
-        "options": {
-          "timeout": 30000
-        }
+        "options": {}
       },
-      "id": "e6ae5b16-de1f-4340-9861-8f246b6cc5f3",
-      "name": "Gemini - Extract Quote Details",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.4,
       "position": [
-        960,
-        -704
-      ]
+        608,
+        -384
+      ],
+      "id": "9cbfe915-4077-49e0-a2e5-ecfcb397feb8",
+      "name": "Gemini - Extract Quote Details",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "QMTnQiLPed7nOCsd",
+          "name": "n8n-elena"
+        },
+        "httpCustomAuth": {
+          "id": "klQsrETMfRepBxr8",
+          "name": "Custom Auth account"
+        }
+      }
     },
     {
       "parameters": {
-        "language": "javascript",
-        "code": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch(e) {\n  parsed = {\n    customer_name: '',\n    customer_email: '',\n    customer_phone: '',\n    customer_address: '',\n    items: [],\n    notes: '',\n    type: 'Quote'\n  };\n}\n\n// Calculate totals\nconst items = parsed.items || [];\nconst subtotal = items.reduce((sum, it) => sum + (it.qty || 0) * (it.unit_price || 0), 0);\nconst grand_total = subtotal;\n\nreturn [{\n  ...$json,\n  customer_name: parsed.customer_name || '',\n  customer_email: parsed.customer_email || '',\n  customer_phone: parsed.customer_phone || '',\n  customer_address: parsed.customer_address || '',\n  items: items,\n  notes: parsed.notes || '',\n  type: parsed.type || 'Quote',\n  subtotal: subtotal,\n  grand_total: grand_total\n}];"
+        "jsCode": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst clean = text.replace(/```json/g, '').replace(/```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch(e) {\n  parsed = {\n    customer_name: '', customer_email: '', customer_phone: '',\n    customer_address: '', items: [], notes: '', type: 'Quote'\n  };\n}\n\nconst items = parsed.items || [];\nconst subtotal = items.reduce((sum, it) => sum + (it.qty || 0) * (it.unit_price || 0), 0);\nconst grand_total = subtotal;\n\nreturn [{\n  ...$json,\n  customer_name: parsed.customer_name || '',\n  customer_email: parsed.customer_email || '',\n  customer_phone: parsed.customer_phone || '',\n  customer_address: parsed.customer_address || '',\n  items: items,\n  notes: parsed.notes || '',\n  type: parsed.type || 'Quote',\n  subtotal: subtotal,\n  grand_total: grand_total\n}];"
       },
-      "id": "71379a43-82e0-47c8-9cac-b6af87fd3c29",
-      "name": "Parse Gemini Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        -704
-      ]
+        816,
+        -384
+      ],
+      "id": "9f3e0d9b-4141-48dd-8f53-a9e46f28ec95",
+      "name": "Parse Gemini Response"
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "={{ $credentials.supabaseUrl }}/rest/v1/customers?email=eq.{{ $json.customer_email }}&select=id,name,email,phone,address",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -98,24 +106,33 @@
             }
           ]
         },
-        "options": {
-          "timeout": 10000
-        }
+        "options": {}
       },
-      "id": "eb73863d-dc09-4f25-b82d-ca891af9d8e2",
-      "name": "Supabase - Find Customer",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.4,
       "position": [
-        1392,
-        -704
-      ]
+        1024,
+        -384
+      ],
+      "id": "20dad98f-3769-43d8-8713-08cc038e0ad5",
+      "name": "Supabase - Find Customer",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "QMTnQiLPed7nOCsd",
+          "name": "n8n-elena"
+        },
+        "httpCustomAuth": {
+          "id": "9QxPPMdRvYGXiJnm",
+          "name": "Custom Auth Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $credentials.supabaseUrl }}/rest/v1/customers?on_conflict=email",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -129,11 +146,11 @@
             },
             {
               "name": "Content-Type",
-              "value": "application/json"
+              "value": "=application/json"
             },
             {
               "name": "Prefer",
-              "value": "resolution=merge-failed"
+              "value": "=resolution=merge-failed"
             }
           ]
         },
@@ -142,38 +159,49 @@
           "parameters": [
             {
               "name": "name",
-              "value": "={{ $json.customer_name }}"
+              "value": "={{ $node['Parse Gemini Response'].json.customer_name }}"
             },
             {
               "name": "email",
-              "value": "={{ $json.customer_email }}"
+              "value": "={{ $node['Parse Gemini Response'].json.customer_email }}"
             },
             {
               "name": "phone",
-              "value": "={{ $json.customer_phone }}"
+              "value": "={{ $node['Parse Gemini Response'].json.customer_phone }}"
             },
             {
               "name": "address",
-              "value": "={{ $json.customer_address }}"
+              "value": "={{ $node['Parse Gemini Response'].json.customer_address }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "32487471-e64e-4009-bcc7-1855b1090cb7",
-      "name": "Supabase - Upsert Customer",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.4,
       "position": [
-        1600,
-        -704
-      ]
+        1216,
+        -384
+      ],
+      "id": "79c35543-9d23-4a74-8c4a-23742f63e1a2",
+      "name": "Supabase - Upsert Customer",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "QMTnQiLPed7nOCsd",
+          "name": "n8n-elena"
+        },
+        "httpCustomAuth": {
+          "id": "9QxPPMdRvYGXiJnm",
+          "name": "Custom Auth Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotations",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -187,11 +215,11 @@
             },
             {
               "name": "Content-Type",
-              "value": "application/json"
+              "value": "=application/json"
             },
             {
               "name": "Prefer",
-              "value": "return=representation"
+              "value": "=return=representation"
             }
           ]
         },
@@ -200,7 +228,7 @@
           "parameters": [
             {
               "name": "quote_no",
-              "value": "={{ $json.quote_no }}"
+              "value": "={{ $node['Parse Gemini Response'].json.quote_no }}"
             },
             {
               "name": "customer_id",
@@ -208,46 +236,57 @@
             },
             {
               "name": "issue_date",
-              "value": "={{ $json.issue_date }}"
+              "value": "={{ $node['Parse Gemini Response'].json.issue_date }}"
             },
             {
               "name": "type",
-              "value": "={{ $json.type }}"
+              "value": "={{ $node['Parse Gemini Response'].json.type }}"
             },
             {
               "name": "status",
-              "value": "={{ $json.status }}"
+              "value": "={{ $node['Parse Gemini Response'].json.status }}"
             },
             {
               "name": "subtotal",
-              "value": "={{ $json.subtotal }}"
+              "value": "={{ $node['Parse Gemini Response'].json.subtotal }}"
             },
             {
               "name": "grand_total",
-              "value": "={{ $json.grand_total }}"
+              "value": "={{ $node['Parse Gemini Response'].json.grand_total }}"
             },
             {
               "name": "notes",
-              "value": "={{ $json.notes }}"
+              "value": "={{ $node['Parse Gemini Response'].json.notes }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "a2fbe3a8-dcc6-4058-a38c-d854258841ef",
-      "name": "Supabase - Create Quotation",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.4,
       "position": [
-        1824,
-        -704
-      ]
+        1456,
+        -384
+      ],
+      "id": "1226a871-f3d4-4526-a424-ebd457bd03ef",
+      "name": "Supabase - Create Quotation",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "QMTnQiLPed7nOCsd",
+          "name": "n8n-elena"
+        },
+        "httpCustomAuth": {
+          "id": "9QxPPMdRvYGXiJnm",
+          "name": "Custom Auth Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $credentials.supabaseUrl }}/rest/v1/quotation_items",
         "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -261,65 +300,79 @@
             },
             {
               "name": "Content-Type",
-              "value": "application/json"
+              "value": "=application/json"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $json.items.map(item => ({ quotation_id: $node['Supabase - Create Quotation'].json[0]?.id, item_title: item.item_title, description: item.description, quantity: item.qty, unit_price: item.unit_price, line_total: item.qty * item.unit_price })) }}",
+        "jsonBody": "={{ $node['Parse Gemini Response'].json.items.map(item => ({\n  quotation_id: $node['Supabase - Create Quotation'].json[0]?.id,\n  item_title: item.item_title,\n  description: item.description,\n  quantity: item.qty,\n  unit_price: item.unit_price,\n  line_total: item.qty * item.unit_price\n})) }}",
         "options": {}
       },
-      "id": "62cb2154-595b-4880-9464-6b223eb78222",
-      "name": "Supabase - Create Items",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.4,
       "position": [
-        2032,
-        -512
-      ]
+        1696,
+        -368
+      ],
+      "id": "f774a7c3-dae8-4057-aa2c-f7751218c753",
+      "name": "Supabase - Create Items",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "QMTnQiLPed7nOCsd",
+          "name": "n8n-elena"
+        },
+        "httpCustomAuth": {
+          "id": "9QxPPMdRvYGXiJnm",
+          "name": "Custom Auth Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "fromEmail": "billing@pixelwave.lk",
         "toEmail": "={{ $node['Parse Gemini Response'].json.customer_email }}",
         "subject": "=New Quote Created: {{ $node['Parse Gemini Response'].json.quote_no }}",
-        "text": "=Hi {{ $node['Parse Gemini Response'].json.customer_name }},\n\nWe've created a quotation based on your inquiry.\n\nQuote No: {{ $node['Parse Gemini Response'].json.quote_no }}\nAmount: LKR {{ $node['Parse Gemini Response'].json.grand_total.toLocaleString() }}\n\nView your quote: https://smartquote.pixelwave.lk/secure/{{ $node['Parse Gemini Response'].json.quote_no }}\n\nBest regards,\nPixelWave Team",
+        "html": "=Hi {{ $node['Parse Gemini Response'].json.customer_name }},\n\nWe've created a quotation based on your inquiry.\n\nQuote No: {{ $node['Parse Gemini Response'].json.quote_no }}\nAmount: LKR {{ $node['Parse Gemini Response'].json.grand_total.toLocaleString() }}\n\nView your quote: https://smartquote.pixelwave.lk/secure/{{ $node['Parse Gemini Response'].json.quote_no }}\n\nBest regards,\nPixelWave Team",
         "options": {}
       },
-      "id": "2ba75536-3c72-49c5-aacc-1cef488c33d1",
-      "name": "Send Email Confirmation",
       "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 1,
+      "typeVersion": 2.1,
       "position": [
-        2160,
-        -704
-      ]
+        1904,
+        -368
+      ],
+      "id": "2cd882e6-0848-4480-901f-442e7fb8cfe7",
+      "name": "Send Email Confirmation",
+      "webhookId": "218c47e3-6210-40f2-9df9-7faa00cb8e71",
+      "credentials": {
+        "smtp": {
+          "id": "kNPRrkpEaeqSxFHh",
+          "name": "SMTP account 2"
+        }
+      }
     },
     {
       "parameters": {
         "queue": "quotes_pending_review",
-        "options": {}
+        "options": {
+          "durable": true
+        }
       },
-      "id": "fe9b04df-3497-4543-a296-dd9dbb51a9a0",
-      "name": "Queue for Review (RabbitMQ)",
       "type": "n8n-nodes-base.rabbitmq",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
-        2256,
-        -512
-      ]
-    },
-    {
-      "parameters": {},
-      "id": "c32a1de5-a99d-434c-972e-8f836500f1fe",
-      "name": "Complete",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        2448,
-        -704
-      ]
+        2112,
+        -368
+      ],
+      "id": "c746012e-23f8-4433-b3dd-c0ec8ca18074",
+      "name": "Queue for Review (RabbitMQ)",
+      "credentials": {
+        "rabbitmq": {
+          "id": "DbKgCmcaMN0m1kt5",
+          "name": "RabbitMQ account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -394,11 +447,6 @@
       "main": [
         [
           {
-            "node": "Send Email Confirmation",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Supabase - Create Items",
             "type": "main",
             "index": 0
@@ -410,7 +458,7 @@
       "main": [
         [
           {
-            "node": "Queue for Review (RabbitMQ)",
+            "node": "Send Email Confirmation",
             "type": "main",
             "index": 0
           }
@@ -421,18 +469,7 @@
       "main": [
         [
           {
-            "node": "Complete",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Queue for Review (RabbitMQ)": {
-      "main": [
-        [
-          {
-            "node": "Complete",
+            "node": "Queue for Review (RabbitMQ)",
             "type": "main",
             "index": 0
           }
@@ -440,10 +477,18 @@
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
+  "versionId": "05601e99-184e-42af-9bd9-b28151c6c0fe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6adb643dd7d273b3a3c36a8c88a219f6c6362a719fc19640e0a85fd38028bd01"
+  },
+  "nodeGroups": [],
+  "id": "1Sx9kzsEGtF1Cjil",
   "tags": [
     {
       "updatedAt": "2026-07-01T05:02:25.487Z",

@@ -1,0 +1,67 @@
+{
+  "name": "01 - Client Inquiry AI Agent (Optimized v2)",
+  "nodes": [
+    {
+      "id": "webhook-whatsapp",
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "client-inquiry",
+      "parameters": {
+        "path": "client-inquiry",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "code-parse-inquiry",
+      "name": "Parse & Format Inquiry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javascript",
+        "code": "const input = $input.first().json;\n\nconst rawMessage = input.body || input.message || input.text || input.content || '';\nconst senderName = input.sender_name || input.name || input.from || 'Unknown';\nconst senderContact = input.sender_contact || input.phone || input.email || '';\nconst channel = input.channel || input.source || 'whatsapp';\n\nconst promptText = `You are a smart quoting assistant for a printing/packaging company. Extract quotation details from this client inquiry. Return ONLY valid JSON with NO markdown formatting or code blocks.\n\n{\n  \"customer_name\": \"full name\",\n  \"customer_email\": \"email if found\",\n  \"customer_phone\": \"phone number\",\n  \"customer_address\": \"address if found\",\n  \"items\": [{\"item_title\": \"service name\", \"description\": \"details\", \"qty\": 1, \"unit_price\": 0}],\n  \"notes\": \"any special requests\",\n  \"type\": \"Quote\"\n}\n\nIf any field is missing, use \"\" or [] or 0. Do NOT guess prices.\n\nInquiry: ${rawMessage}\nFrom: ${senderName} (${senderContact})`;\n\nreturn [{\n  raw_message: rawMessage,\n  sender_name: senderName,\n  sender_contact: senderContact,\n  channel: channel,\n  gemini_payload: {\n    contents: [\n      { role: \"user\", parts: [{ text: promptText }] }\n    ]\n  },\n  timestamp: new Date().toISOString()\n}];"
+      }
+    },
+    {
+      "id": "gemini-parse",
+      "name": "Gemini - Extract Quote Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "x-goog-api-key", "value": "={{ $credentials.geminiApiKey }}"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.gemini_payload }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "code-gemini-response",
+      "name": "Parse Gemini Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javascript",
+        "code": "const response = $input.first().json;\nlet parsed;\n\ntry {\n  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';\n  const cleanJson = text.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
+
+Meka test karaddi thama error ekak enawanam, execution logs wala mokakda pennana specific error eka (e.g., "Cannot read properties of undefined" wage deyak da)?

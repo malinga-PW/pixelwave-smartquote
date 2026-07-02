@@ -90,7 +90,7 @@
       "typeVersion": 1,
       "position": [1280, 200],
       "parameters": {
-        "fromEmail": "notifications@pixelwave.lk",
+        "fromEmail": "billing@pixelwave.lk",
         "toEmail": "team@pixelwave.lk",
         "subject": "={{ $json.emoji + ' Kanban: ' + $json.title + ' → ' + $json.kanban_col }}",
         "text": "={{ $json.team_message + '\\n\\nClient: ' + $json.client_name + '\\nAssigned: ' + $json.assigned_to + '\\nPriority: ' + $json.priority + '\\nDue: ' + $json.due_date }}",

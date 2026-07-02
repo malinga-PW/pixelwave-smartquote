@@ -198,7 +198,7 @@
       "typeVersion": 1,
       "position": [1840, 320],
       "parameters": {
-        "fromEmail": "marketing@pixelwave.lk",
+        "fromEmail": "billing@pixelwave.lk",
         "toEmail": "={{ $json.email }}",
         "subject": "={{ $json.name }}, check this out!",
         "text": "={{ $json.final_message }}",

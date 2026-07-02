@@ -207,12 +207,16 @@
         [{ "node": "Supabase - Create Invoice Item", "type": "main", "index": 0 }]
       ]
     },
-    "Supabase - Create Invoice": { "main": [[ ]] },
+    "Supabase - Create Invoice": {
+      "main": [[
+        { "node": "Supabase - Create Invoice Item", "type": "main", "index": 0 },
+        { "node": "Email Invoice to Client", "type": "main", "index": 0 }
+      ]]
+    },
     "Supabase - Create Invoice Item": {
-      "main": [
-        [{ "node": "Email Invoice to Client", "type": "main", "index": 0 }],
-        [{ "node": "Supabase - Log Billing", "type": "main", "index": 0 }]
-      ]
+      "main": [[
+        { "node": "Supabase - Log Billing", "type": "main", "index": 0 }
+      ]]
     },
     "Email Invoice to Client": { "main": [[ ]] },
     "Supabase - Log Billing": { "main": [[ ]] }

@@ -326,9 +326,10 @@ export default function ClientPortal({ activeDocument, onUpdateStatus }) {
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Issued By</span>
             <p className="font-bold text-slate-800">PixelWave Solutions</p>
             <p className="text-slate-500 mt-1 leading-relaxed">
-              TechSpace Building, Suite 104,<br />
-              Colombo 03, Sri Lanka.<br />
-              billing@pixelwave.lk
+              91/01/B1 Udumulla Road, Mulleriyawa,<br />
+              Colombo, Sri Lanka. 10620<br />
+              billing@pixelwave.lk<br />
+              +94 71 973 973 4 / +94 77 498 5135
             </p>
           </div>
 
