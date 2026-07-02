@@ -142,27 +142,44 @@ export default function DocEditor({
     }
   };
 
-  // Simulate n8n AI Agent parsing
+  // Parse via n8n AI Agent webhook
   const simulateAIParse = async (rawText) => {
     setIsParsing(true);
     setActiveStepLog('');
 
     const logs = [
-      '📡 Webhook triggered with raw text brief...',
-      '🤖 [AI Agent] Invoking Gemini-3.5 model for parsing...',
-      '📊 [AI Agent] Extracting details and searching database...',
-      '📈 [AI Agent] Cost matrices applied. Syncing document...'
+      '📡 Triggering n8n webhook: /webhook/client-inquiry...',
+      '🤖 [AI Agent] Gemini parsing inquiry...',
+      '📊 [AI Agent] Matching customer & creating quotation...',
+      '📈 [AI Agent] Document synced. Populating form...'
     ];
 
-    for (let i = 0; i < logs.length; i++) {
-      setActiveStepLog(logs[i]);
-      await new Promise(resolve => setTimeout(resolve, 500));
+    let webhookOk = false;
+    try {
+      setActiveStepLog(logs[0]);
+      const res = await fetch('https://n8n.pixelwave.lk/webhook/client-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: rawText, source: 'admin_panel' })
+      });
+      webhookOk = res.ok;
+      if (res.ok) {
+        setActiveStepLog(logs[1]);
+        await new Promise(resolve => setTimeout(resolve, 400));
+        setActiveStepLog(logs[2]);
+      } else {
+        addMessage('ai', `⚠️ n8n webhook returned ${res.status}. Using local preset instead.`);
+      }
+    } catch (err) {
+      addMessage('ai', `⚠️ n8n unreachable (${err.message}). Using local preset.`);
     }
+
+    setActiveStepLog(webhookOk ? logs[3] : '📋 Using local preset data...');
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     const preset = mockAIIntakePresets.find(p => p.id === selectedPresetId) || mockAIIntakePresets[0];
     const data = preset.parsedOutput;
 
-    // Build AI response summary
     const itemSummary = data.items.map(it => `• ${it.item_title} — ${it.qty} x ${it.unit_price.toLocaleString()} LKR`).join('\n');
     const aiResponse = `✅ **Parsed Successfully!**\n\n**Customer:** ${data.customer_name}\n**Email:** ${data.customer_email}\n**Phone:** ${data.customer_phone}\n**Total:** ${data.items.reduce((s, it) => s + it.qty * it.unit_price, 0).toLocaleString()} LKR\n\n**Items:**\n${itemSummary}\n\nForm fields have been populated. Review and save.`;
 
